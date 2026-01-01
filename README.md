@@ -95,6 +95,6 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/tasks
 - Keep secrets in env vars; do not commit credentials.
 - Rotate any exposed MongoDB password and JWT secret.
 - Consider adding `application.properties.example` and ignoring real `application.properties`.
-
+<!-- 
 ## License
-MIT (or add your preferred license).
+MIT (or add your preferred license). -->
