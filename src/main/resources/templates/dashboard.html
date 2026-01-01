@@ -13,9 +13,51 @@
   <nav class="navbar navbar-dark bg-dark mb-3">
     <div class="container-fluid">
       <span class="navbar-brand mb-0 h1">Task Manager</span>
-      <button id="newBtn" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>New Task</button>
+      <div class="d-flex gap-2">
+        <button id="loginBtn" class="btn btn-outline-light">Sign in</button>
+        <button id="signupBtn" class="btn btn-primary">Sign up</button>
+        <button id="newBtn" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>New Task</button>
+      </div>
     </div>
   </nav>
+
+  <!-- Sign in Modal -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="loginForm">
+        <div class="modal-header"><h5 class="modal-title">Sign in</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2"><input id="lu" class="form-control" placeholder="Username" required></div>
+          <div class="mb-2"><input id="lp" class="form-control" type="password" placeholder="Password" required></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Sign up Modal -->
+  <div class="modal fade" id="signupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="signupForm">
+        <div class="modal-header"><h5 class="modal-title">Create account</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-2"><input id="su" class="form-control" placeholder="Username" required></div>
+          <div class="mb-2"><input id="sp" class="form-control" type="password" placeholder="Password" required></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="submit">Sign up</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <div class="container">
     <!-- Stats -->
