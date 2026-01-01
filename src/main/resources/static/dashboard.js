@@ -4,7 +4,11 @@
 let tasks = [];
 const modal = new bootstrap.Modal(document.getElementById('taskModal'));
 
-async function api(path, opt) {
+let token = localStorage.getItem('token') || '';
+
+async function api(path, opt = {}) {
+  opt.headers = Object.assign({}, opt.headers || {});
+  if (token) opt.headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(path, opt);
   if (!res.ok) throw new Error(await res.text());
   return res.status === 204 ? null : res.json();
@@ -141,6 +145,33 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   document.getElementById('status').value = '';
   document.getElementById('priority').value = '';
   render();
+});
+
+/* Auth UI */
+const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
+
+document.getElementById('loginBtn').addEventListener('click', () => loginModal.show());
+document.getElementById('signupBtn').addEventListener('click', () => signupModal.show());
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = { username: document.getElementById('lu').value, password: document.getElementById('lp').value };
+  const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) { alert('Sign in failed'); return; }
+  const data = await r.json();
+  token = data.token; localStorage.setItem('token', token);
+  loginModal.hide(); await load();
+});
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = { username: document.getElementById('su').value, password: document.getElementById('sp').value };
+  const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) { alert(await r.text()); return; }
+  const data = await r.json();
+  token = data.token; localStorage.setItem('token', token);
+  signupModal.hide(); await load();
 });
 
 load();
