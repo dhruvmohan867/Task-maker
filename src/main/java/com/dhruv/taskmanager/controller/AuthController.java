@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.dhruv.taskmanager.model.User;
 import com.dhruv.taskmanager.repository.UserRepository;
 import com.dhruv.taskmanager.security.JwtService;
+import com.dhruv.taskmanager.service.TaskService;
 
 @RestController
 @RequestMapping("/auth")
@@ -15,8 +16,10 @@ public class AuthController {
     private final UserRepository users;
     private final PasswordEncoder encoder;
     private final JwtService jwt;
-    public AuthController(UserRepository users, PasswordEncoder encoder, JwtService jwt) {
-        this.users = users; this.encoder = encoder; this.jwt = jwt;
+    private final TaskService tasks;
+
+    public AuthController(UserRepository users, PasswordEncoder encoder, JwtService jwt, TaskService tasks) {
+        this.users = users; this.encoder = encoder; this.jwt = jwt; this.tasks = tasks;
     }
 
     @PostMapping("/signup")
@@ -37,6 +40,9 @@ public class AuthController {
         user.setPassword(encoder.encode(p));
         user.setRoles(Set.of("USER"));
         users.save(user);
+
+        // create sample tasks for the new user
+        tasks.ensureSample(u);
 
         String token = jwt.createToken(u, user.getRoles());
         return ResponseEntity.ok(Map.of(

@@ -34,7 +34,7 @@ public class TaskController {
 
         List<Task> tasks = isAdmin()
                 ? service.all()
-                : service.byOwner(Objects.requireNonNull(principal.getName()));
+                : service.ensureSample(Objects.requireNonNull(principal.getName()));
 
         return ResponseEntity.ok(tasks);
     }

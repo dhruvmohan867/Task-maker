@@ -8,52 +8,51 @@
   <link rel="stylesheet" href="/main.css">
 </head>
 <body class="bg-body">
-  <!-- Top navbar with search + user -->
-  <nav class="navbar navbar-dark bg-dark mb-3">
-    <div class="container-fluid">
-      <span class="navbar-brand">Task Manager</span>
-      <div class="d-flex align-items-center gap-2">
-        <input id="globalSearch" class="form-control form-control-sm" placeholder="Search tasks" style="max-width:280px">
-        <button id="loginBtn" class="btn btn-outline-light">Sign in</button>
-        <button id="signupBtn" class="btn btn-primary">Sign up</button>
-        <button id="logoutBtn" class="btn btn-outline-warning" style="display:none"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
-        <button id="newBtn" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>New Task</button>
+  <nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">TaskManager</a>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-light" href="/login">Login</a>
+        <a class="btn btn-primary" href="/signup">Sign up</a>
       </div>
     </div>
   </nav>
 
-  <!-- Sidebar + content -->
-  <div class="container-fluid">
-    <div class="row">
-      <aside class="col-md-2 mb-3">
-        <div class="list-group">
-          <a class="list-group-item list-group-item-action active" href="/dashboard">Dashboard</a>
-          <a class="list-group-item list-group-item-action" href="/dashboard#tasks">My Tasks</a>
-          <a class="list-group-item list-group-item-action" id="menuCreate">Create Task</a>
-          <a class="list-group-item list-group-item-action" id="menuAnalytics">Analytics</a>
-          <a class="list-group-item list-group-item-action" href="/settings">Settings</a>
-          <a class="list-group-item list-group-item-action" id="menuAdmin" style="display:none">Admin</a>
+  <section class="container py-5">
+    <div class="row align-items-center">
+      <div class="col-lg-6">
+        <h1 class="display-6 fw-bold">Organize your work. Focus on what matters.</h1>
+        <p class="text-muted">A simple, secure task manager to plan, track, and complete your work efficiently.</p>
+        <div class="d-flex gap-2">
+          <a class="btn btn-primary btn-lg" href="/signup">Get Started</a>
+          <a class="btn btn-outline-secondary btn-lg" href="/login">Login</a>
         </div>
-      </aside>
-      <main class="col-md-10">
-        <!-- Admin and Employee panels kept -->
-        <!-- ...existing code... -->
-
-        <!-- Empty state -->
-        <div id="emptyState" class="text-center py-5" style="display:none">
-          <img class="mb-3" src="https://dummyimage.com/240x140/e9eef4/aaaaaa&text=No+Tasks" alt="">
-          <h5>You don’t have any tasks yet.</h5>
-          <p class="text-muted">Create your first task to get started.</p>
-          <button class="btn btn-success" id="emptyCreateBtn">Create your first task</button>
-        </div>
-
-        <!-- Existing filters + table + charts -->
-        <!-- ...existing code... -->
-      </main>
+      </div>
+      <div class="col-lg-6">
+        <img class="img-fluid rounded shadow" alt="Dashboard preview"
+             src="https://dummyimage.com/900x420/f2f4f8/aaaaaa&text=Dashboard+Preview">
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Modals, scripts ... -->
-  <!-- ...existing code... -->
+  <section id="features" class="container py-4">
+    <div class="row g-3">
+      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>✅ Create & manage tasks</h6><p class="small text-muted">Fast CRUD with priority and due dates.</p></div></div></div>
+      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>🔁 Track task progress</h6><p class="small text-muted">OPEN → IN_PROGRESS → DONE flow.</p></div></div></div>
+      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>👥 Assign tasks</h6><p class="small text-muted">Assign and filter by assignee.</p></div></div></div>
+      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>🔒 Secure authentication</h6><p class="small text-muted">JWT + role-based access.</p></div></div></div>
+    </div>
+  </section>
+
+  <footer class="border-top py-4 mt-4">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div class="small text-muted">© 2026 TaskManager</div>
+      <div class="small">
+        <a class="me-3" href="https://github.com/" target="_blank">GitHub</a>
+        <a class="me-3" href="https://linkedin.com/" target="_blank">LinkedIn</a>
+        <span class="text-muted">Spring Boot · MongoDB · JWT · Thymeleaf</span>
+      </div>
+    </div>
+  </footer>
 </body>
-<!-- ...existing code... -->
+</html>
