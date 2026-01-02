@@ -122,30 +122,89 @@ function applyRoleUI() {
   document.getElementById('employeePanel').style.display = isAdmin() ? 'none' : '';
 }
 
-let statusChart;
+let statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart;
+
+function renderAdminCharts(s) {
+  // Status pie
+  const dist = s.distribution;
+  const statusCfg = {
+    type: 'pie',
+    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
+      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
+        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
+        borderColor: ['var(--c-open)','var(--c-inp)','var(--c-done)'] }]},
+    options: { plugins: { legend: { position: 'bottom' } } }
+  };
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(document.getElementById('statusChart'), statusCfg);
+
+  // Priority bar
+  const pr = s.priorities;
+  const prCfg = {
+    type: 'bar',
+    data: { labels: ['LOW','MEDIUM','HIGH'],
+      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
+        backgroundColor: ['var(--c-low)','var(--c-med)','var(--c-high)'] }]},
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, precision: 0 } } }
+  };
+  if (priorityChart) priorityChart.destroy();
+  priorityChart = new Chart(document.getElementById('priorityChart'), prCfg);
+
+  // Weekly line
+  const w = s.weekly;
+  const wkCfg = {
+    type: 'line',
+    data: {
+      labels: w.labels,
+      datasets: [
+        { label: 'Open', data: w.OPEN, borderColor: 'var(--c-open)', backgroundColor: '#0d6efd33', tension: .3 },
+        { label: 'In progress', data: w.IN_PROGRESS, borderColor: 'var(--c-inp)', backgroundColor: '#ffc10733', tension: .3 },
+        { label: 'Done', data: w.DONE, borderColor: 'var(--c-done)', backgroundColor: '#19875433', tension: .3 }
+      ]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, precision: 0 } } }
+  };
+  if (weeklyChart) weeklyChart.destroy();
+  weeklyChart = new Chart(document.getElementById('weeklyChart'), wkCfg);
+}
+
+function renderEmployeeCharts(s) {
+  const dist = s.distribution;
+  if (meStatusChart) meStatusChart.destroy();
+  meStatusChart = new Chart(document.getElementById('meStatusChart'), {
+    type: 'doughnut',
+    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
+      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
+        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
+        borderColor: ['var(--c-open)','var(--c-inp)','var(--c-done)'] }]},
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const pr = s.priorities;
+  if (mePriorityChart) mePriorityChart.destroy();
+  mePriorityChart = new Chart(document.getElementById('mePriorityChart'), {
+    type: 'bar',
+    data: { labels: ['LOW','MEDIUM','HIGH'],
+      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
+        backgroundColor: ['var(--c-low)','var(--c-med)','var(--c-high)'] }]},
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, precision: 0 } } }
+  });
+}
+
 async function loadAdmin() {
   const s = await api('/api/stats/admin');
   document.getElementById('adminTotal').textContent = s.total;
   document.getElementById('adminAssigned').textContent = s.assigned;
   document.getElementById('adminDone').textContent = s.done;
   document.getElementById('adminRunning').textContent = (s.total - s.done);
-  const data = s.distribution;
-  const ctx = document.getElementById('statusChart');
-  const cfg = {
-    type: 'pie',
-    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
-      datasets: [{ data: [data.OPEN, data.IN_PROGRESS, data.DONE],
-        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
-        borderColor: ['#0d6efd','#ffc107','#198754'] }]},
-    options: { plugins: { legend: { position: 'bottom' } } }
-  };
-  if (statusChart) { statusChart.destroy(); }
-  statusChart = new Chart(ctx, cfg);
+  renderAdminCharts(s);
 }
 
 async function loadEmployee() {
   tasks = await api('/api/tasks');
   render();
+  const s = await api('/api/stats/me');
+  renderEmployeeCharts(s);
 }
 
 async function load() {

@@ -2,7 +2,8 @@
 body.bg-body { background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); }
 .navbar { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .stat-card { border-left: 4px solid var(--bs-primary); }
-.card-title { font-weight: 600; }
+.card { border: 1px solid #e9eef4; }
+.card-title { font-weight: 600; letter-spacing: .2px; }
 /* Admin colors to mimic the SS */
 .badge-status { font-weight: 500; }
 .badge-status.OPEN { background:#0d6efd1a;color:#0d6efd; }
@@ -13,3 +14,12 @@ body.bg-body { background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); }
 .modal-title { font-weight: 600; }
 .input-group .btn { border-color: #ced4da; }
 #tasksTable tbody tr:hover { background-color: #f7f9fb; }
+/* chart palette */
+:root {
+  --c-open: #0d6efd;
+  --c-inp: #ffc107;
+  --c-done: #198754;
+  --c-low: #6c757d;
+  --c-med: #0dcaf0;
+  --c-high: #dc3545;
+}
