@@ -159,6 +159,90 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   applyRoleUI();
 });
 
+// Charts (declare once to avoid ReferenceError)
+let statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart;
+
+// Render charts for Admin
+function renderAdminCharts(s) {
+  const dist = s.distribution;
+  if (statusChart) statusChart.destroy();
+  statusChart = new Chart(document.getElementById('statusChart'), {
+    type: 'pie',
+    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
+      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
+        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
+        borderColor: ['#0d6efd','#ffc107','#198754'] }]},
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const pr = s.priorities;
+  if (priorityChart) priorityChart.destroy();
+  priorityChart = new Chart(document.getElementById('priorityChart'), {
+    type: 'bar',
+    data: { labels: ['LOW','MEDIUM','HIGH'],
+      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
+        backgroundColor: ['#6c757d','#0dcaf0','#dc3545'] }]},
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  const w = s.weekly;
+  if (weeklyChart) weeklyChart.destroy();
+  weeklyChart = new Chart(document.getElementById('weeklyChart'), {
+    type: 'line',
+    data: {
+      labels: w.labels,
+      datasets: [
+        { label: 'Open', data: w.OPEN, borderColor: '#0d6efd', backgroundColor: '#0d6efd33', tension: .3 },
+        { label: 'In progress', data: w.IN_PROGRESS, borderColor: '#ffc107', backgroundColor: '#ffc10733', tension: .3 },
+        { label: 'Done', data: w.DONE, borderColor: '#198754', backgroundColor: '#19875433', tension: .3 }
+      ]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// Employee charts
+function renderEmployeeCharts(s) {
+  const dist = s.distribution;
+  if (meStatusChart) meStatusChart.destroy();
+  meStatusChart = new Chart(document.getElementById('meStatusChart'), {
+    type: 'doughnut',
+    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
+      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
+        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
+        borderColor: ['#0d6efd','#ffc107','#198754'] }]},
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const pr = s.priorities;
+  if (mePriorityChart) mePriorityChart.destroy();
+  mePriorityChart = new Chart(document.getElementById('mePriorityChart'), {
+    type: 'bar',
+    data: { labels: ['LOW','MEDIUM','HIGH'],
+      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
+        backgroundColor: ['#6c757d','#0dcaf0','#dc3545'] }]},
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// Loaders for each role
+async function loadAdmin() {
+  const s = await api('/api/stats/admin');
+  document.getElementById('adminTotal').textContent = s.total;
+  document.getElementById('adminAssigned').textContent = s.assigned;
+  document.getElementById('adminDone').textContent = s.done;
+  document.getElementById('adminRunning').textContent = (s.total - s.done);
+  renderAdminCharts(s);
+}
+
+async function loadEmployee() {
+  tasks = await api('/api/tasks');
+  render();
+  const s = await api('/api/stats/me');
+  renderEmployeeCharts(s);
+}
+
+// Replace duplicate load() with a single one
 async function load() {
   applyRoleUI();
   if (!isLogged()) return;
