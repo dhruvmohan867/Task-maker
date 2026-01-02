@@ -52,23 +52,32 @@ public class StatsController {
             LocalDate weekStart = today.minusWeeks(i).with(DayOfWeek.MONDAY);
             labels.add(weekStart.toString());
         }
-        Map<String,long[]> weekly = new LinkedHashMap<>();
-        weekly.put("labels", labels.toArray(new String[0]));
-        weekly.put("OPEN", new long[8]);
-        weekly.put("IN_PROGRESS", new long[8]);
-        weekly.put("DONE", new long[8]);
+
+        // Build arrays
+        String[] labelArr = labels.toArray(new String[0]);
+        long[] openArr = new long[8];
+        long[] inProgressArr = new long[8];
+        long[] doneArr = new long[8];
 
         tasks.forEach(t -> {
             if (t.getDueDate() == null) return;
             LocalDate d = t.getDueDate().atZone(ZoneId.systemDefault()).toLocalDate().with(DayOfWeek.MONDAY);
             int idx = labels.indexOf(d.toString());
             if (idx >= 0) {
-                String s = t.getStatus();
-                if (weekly.containsKey(s)) {
-                    weekly.get(s)[idx] = weekly.get(s)[idx] + 1;
+                switch (t.getStatus()) {
+                    case "OPEN" -> openArr[idx]++;
+                    case "IN_PROGRESS" -> inProgressArr[idx]++;
+                    case "DONE" -> doneArr[idx]++;
                 }
             }
         });
+
+        // Package weekly stats
+        Map<String,Object> weekly = new LinkedHashMap<>();
+        weekly.put("labels", labelArr);
+        weekly.put("OPEN", openArr);
+        weekly.put("IN_PROGRESS", inProgressArr);
+        weekly.put("DONE", doneArr);
 
         Map<String,Object> resp = new HashMap<>();
         resp.put("total", total);
