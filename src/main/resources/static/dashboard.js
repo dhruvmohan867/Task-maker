@@ -114,6 +114,47 @@ document.getElementById('toggleSignupPw').addEventListener('click', () => {
   const i = document.getElementById('sp'); i.type = i.type === 'password' ? 'text' : 'password';
 });
 
+let roles = JSON.parse(localStorage.getItem('roles') || '[]');
+const isAdmin = () => roles.includes('ADMIN');
+
+function applyRoleUI() {
+  document.getElementById('adminPanel').style.display = isAdmin() ? '' : 'none';
+  document.getElementById('employeePanel').style.display = isAdmin() ? 'none' : '';
+}
+
+let statusChart;
+async function loadAdmin() {
+  const s = await api('/api/stats/admin');
+  document.getElementById('adminTotal').textContent = s.total;
+  document.getElementById('adminAssigned').textContent = s.assigned;
+  document.getElementById('adminDone').textContent = s.done;
+  document.getElementById('adminRunning').textContent = (s.total - s.done);
+  const data = s.distribution;
+  const ctx = document.getElementById('statusChart');
+  const cfg = {
+    type: 'pie',
+    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
+      datasets: [{ data: [data.OPEN, data.IN_PROGRESS, data.DONE],
+        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
+        borderColor: ['#0d6efd','#ffc107','#198754'] }]},
+    options: { plugins: { legend: { position: 'bottom' } } }
+  };
+  if (statusChart) { statusChart.destroy(); }
+  statusChart = new Chart(ctx, cfg);
+}
+
+async function loadEmployee() {
+  tasks = await api('/api/tasks');
+  render();
+}
+
+async function load() {
+  applyRoleUI();
+  if (isAdmin()) { await loadAdmin(); }
+  else { await loadEmployee(); }
+}
+
+// store roles at auth
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const body = { username: document.getElementById('lu').value.trim(), password: document.getElementById('lp').value };
@@ -121,7 +162,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!r.ok) { err.textContent = 'Invalid credentials'; err.style.display = 'block'; return; }
   const data = await r.json();
-  token = data.token; localStorage.setItem('token', token);
+  token = data.token; roles = data.roles || []; localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles));
   loginModal.hide(); await load();
 });
 
@@ -134,7 +175,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
   if (!r.ok) { err.textContent = await r.text(); err.style.display = 'block'; return; }
   const data = await r.json();
-  token = data.token; localStorage.setItem('token', token);
+  token = data.token; roles = data.roles || []; localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles));
   signupModal.hide(); await load();
 });
 
@@ -187,4 +228,5 @@ const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
 document.getElementById('loginBtn').addEventListener('click', () => loginModal.show());
 document.getElementById('signupBtn').addEventListener('click', () => signupModal.show());
 
+applyRoleUI();
 load();
