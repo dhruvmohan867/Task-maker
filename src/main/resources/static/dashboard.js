@@ -327,6 +327,11 @@ document.getElementById('clearFilters').addEventListener('click', () => {
   render();
 });
 
+document.getElementById('globalSearch')?.addEventListener('input', (e) => {
+  const qEl = document.getElementById('q');
+  if (qEl) { qEl.value = e.target.value; render(); }
+});
+
 /* Auth UI */
 const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
 const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
