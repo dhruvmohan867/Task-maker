@@ -30,6 +30,8 @@ function showLoader(on = true) {
 }
 function toast(msg, type = 'success') {
   const cont = document.getElementById('toastContainer'); if (!cont) return;
+  // Show only error toasts; suppress success/info to match requirements
+  if (type !== 'error') return;
   const t = document.createElement('div');
   t.className = `toast align-items-center text-white border-0 ${type}`;
   t.setAttribute('role', 'alert'); t.setAttribute('aria-live', 'assertive'); t.setAttribute('aria-atomic', 'true');
@@ -114,7 +116,7 @@ document.getElementById('darkToggle')?.addEventListener('change', (e) => {
   const theme = e.target.checked ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem('theme', theme);
-  toast(`Switched to ${theme} mode`);
+  // removed success toast on theme toggle
 });
 
 /* ------------- filters ------------- */
@@ -400,7 +402,8 @@ document.getElementById('logoutBtn')?.addEventListener('click', () => {
   localStorage.removeItem('token'); localStorage.removeItem('roles'); localStorage.removeItem('user');
   [statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart].forEach(c => { try { c?.destroy(); } catch {} });
   tasks = []; render(); applyRoleUI();
-  toast('Logged out', 'success');
+  // redirect to Landing page instead of staying on dashboard
+  location.href = '/';
 });
 
 // Login (modal)
@@ -418,11 +421,11 @@ document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
     const data = await r.json();
     token = data.token; roles = data.roles || []; user = data.user || null;
     localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
-    loginModal?.hide(); toast('Welcome back!');
+    loginModal?.hide();
     await load();
   } catch (ex) {
     if (err) { err.textContent = ex.message; err.style.display = 'block'; }
-    toast('Login failed', 'error');
+    toast('Login failed', 'error'); // keep error toast
   }
 });
 
@@ -445,11 +448,11 @@ document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
     const data = await r.json();
     token = data.token; roles = data.roles || []; user = data.user || null;
     localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
-    signupModal?.hide(); toast('Account created!');
+    signupModal?.hide();
     await load();
   } catch (ex) {
     if (err) { err.textContent = ex.message; err.style.display = 'block'; }
-    toast('Signup failed', 'error');
+    toast('Signup failed', 'error'); // keep error toast
   }
 });
 

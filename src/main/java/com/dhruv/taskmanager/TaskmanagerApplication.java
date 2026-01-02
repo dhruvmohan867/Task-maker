@@ -26,7 +26,6 @@ public class TaskmanagerApplication {
                 u.setRoles(Set.of("ADMIN"));
                 return users.save(u);
             });
-            tasks.ensureSample("admin");
         };
     }
 }

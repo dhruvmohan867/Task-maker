@@ -1,37 +1,37 @@
 /* Global + variables */
 :root {
   --bg: #0b1020;
-  --grad-1: #111827;
-  --grad-2: #1f2937;
+  --grad-1: #0f172a; /* darker */
+  --grad-2: #1e293b; /* darker */
   --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
+  --text: #0e141b;   /* stronger for light */
+  --muted: #475569;  /* improved contrast */
   --accent: #2563EB;
   --success: #198754;
   --warning: #f59e0b;
   --danger: #dc3545;
-
   --c-open: #0d6efd;
-  --c-inp: #ffc107;
+  --c-inp: #b58100;
   --c-done: #198754;
   --c-low: #6c757d;
-  --c-med: #0dcaf0;
+  --c-med: #0ca9c9;
   --c-high: #dc3545;
 }
 
 html[data-theme="dark"] {
-  --card: #111827;
-  --text: #e5e7eb;
-  --muted: #9ca3af;
-  --grad-1: #0b1020;
-  --grad-2: #0c1326;
+  --card:#111827;
+  --text:#e5e7eb;
+  --muted:#cbd5e1;
+  --grad-1:#0b1020;
+  --grad-2:#0c1326;
 }
 
 /* Landing */
 .bg-landing {
-  background: linear-gradient(120deg, var(--grad-1), var(--grad-2));
-  color: var(--text);
+  background: linear-gradient(115deg, var(--grad-1) 0%, var(--grad-2) 100%);
+  color: #e6edf7; /* high-contrast text */
 }
+.bg-landing .text-muted { color: #cbd5e1 !important; } /* readable on dark */
 .hero h1 { color:#fff; }
 .badge.text-bg-primary-soft { background:#2563eb26; color:#9ec1ff; }
 .mockup { border-radius: 16px; overflow: hidden; position: relative; }
