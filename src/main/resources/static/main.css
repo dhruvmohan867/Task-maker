@@ -1,4 +1,6 @@
 /* ...existing code... */
+body.bg-body { background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); }
+.navbar { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .stat-card { border-left: 4px solid var(--bs-primary); }
 .table td, .table th { vertical-align: middle; }
 .badge-status { font-weight: 500; }
@@ -6,5 +8,7 @@
 .badge-status.IN_PROGRESS { background-color: #ffc1071a; color: #b58100; }
 .badge-status.DONE { background-color: #1987541a; color: #198754; }
 .navbar .btn { min-width: 100px; }
-.modal-content { border-radius: 12px; }
+.modal-content { border-radius: 14px; }
 .modal-title { font-weight: 600; }
+.input-group .btn { border-color: #ced4da; }
+#tasksTable tbody tr:hover { background-color: #f7f9fb; }

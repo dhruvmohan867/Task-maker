@@ -23,14 +23,26 @@
 
   <!-- Sign in Modal -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form class="modal-content" id="loginForm">
-        <div class="modal-header"><h5 class="modal-title">Sign in</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content shadow-lg" id="loginForm">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Welcome back</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2"><input id="lu" class="form-control" placeholder="Username" required></div>
-          <div class="mb-2"><input id="lp" class="form-control" type="password" placeholder="Password" required></div>
+          <div class="text-muted small mb-3">Sign in to manage your tasks.</div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input id="lu" class="form-control" placeholder="john_doe" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <input id="lp" class="form-control" type="password" placeholder="••••••••" required>
+              <button class="btn btn-outline-secondary" type="button" id="toggleLoginPw"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div id="loginError" class="invalid-feedback d-block" style="display:none"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
@@ -42,18 +54,31 @@
 
   <!-- Sign up Modal -->
   <div class="modal fade" id="signupModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form class="modal-content" id="signupForm">
-        <div class="modal-header"><h5 class="modal-title">Create account</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog modal-dialog-centered">
+      <form class="modal-content shadow-lg" id="signupForm">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title">Create your account</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-2"><input id="su" class="form-control" placeholder="Username" required></div>
-          <div class="mb-2"><input id="sp" class="form-control" type="password" placeholder="Password" required></div>
+          <div class="text-muted small mb-3">Start tracking tasks in seconds.</div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input id="su" class="form-control" placeholder="john_doe" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Password</label>
+            <div class="input-group">
+              <input id="sp" class="form-control" type="password" placeholder="Min 8 characters" required>
+              <button class="btn btn-outline-secondary" type="button" id="toggleSignupPw"><i class="bi bi-eye"></i></button>
+            </div>
+          </div>
+          <div class="form-text">Use at least 8 characters.</div>
+          <div id="signupError" class="invalid-feedback d-block" style="display:none"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
-          <button class="btn btn-primary" type="submit">Sign up</button>
+          <button class="btn btn-success" type="submit">Sign up</button>
         </div>
       </form>
     </div>

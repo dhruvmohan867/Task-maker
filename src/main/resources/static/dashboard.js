@@ -107,33 +107,66 @@ async function delTask(id) {
   await load();
 }
 
+document.getElementById('toggleLoginPw').addEventListener('click', () => {
+  const i = document.getElementById('lp'); i.type = i.type === 'password' ? 'text' : 'password';
+});
+document.getElementById('toggleSignupPw').addEventListener('click', () => {
+  const i = document.getElementById('sp'); i.type = i.type === 'password' ? 'text' : 'password';
+});
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = { username: document.getElementById('lu').value.trim(), password: document.getElementById('lp').value };
+  const err = document.getElementById('loginError'); err.style.display = 'none';
+  const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (!r.ok) { err.textContent = 'Invalid credentials'; err.style.display = 'block'; return; }
+  const data = await r.json();
+  token = data.token; localStorage.setItem('token', token);
+  loginModal.hide(); await load();
+});
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const u = document.getElementById('su').value.trim();
+  const p = document.getElementById('sp').value;
+  const err = document.getElementById('signupError'); err.style.display = 'none';
+  if (p.length < 8) { err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return; }
+  const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+  if (!r.ok) { err.textContent = await r.text(); err.style.display = 'block'; return; }
+  const data = await r.json();
+  token = data.token; localStorage.setItem('token', token);
+  signupModal.hide(); await load();
+});
+
+// Business rules (UI guards)
+function validateDueDate(dateStr) {
+  if (!dateStr) return true;
+  const sel = new Date(dateStr); sel.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  return sel >= today;
+}
+const FLOW = { OPEN: ['OPEN', 'IN_PROGRESS'], IN_PROGRESS: ['IN_PROGRESS', 'DONE'], DONE: ['DONE'] };
+
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const id = document.getElementById('taskId').value;
   const payload = {
-    title: document.getElementById('title').value,
+    title: document.getElementById('title').value.trim(),
     description: document.getElementById('description').value,
     status: document.getElementById('statusInput').value,
     priority: document.getElementById('priorityInput').value,
     dueDate: document.getElementById('dueDate').value ? new Date(document.getElementById('dueDate').value).toISOString() : null,
     assignee: document.getElementById('assignee').value
   };
-
+  if (!validateDueDate(document.getElementById('dueDate').value)) { alert('Due date cannot be in the past'); return; }
   if (id) {
-    await api(`/api/tasks/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...payload, id })
-    });
+    const prev = tasks.find(t => t.id === id)?.status ?? 'OPEN';
+    if (!FLOW[prev].includes(payload.status)) { alert(`Invalid status transition ${prev} → ${payload.status}`); return; }
+    await api(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, id }) });
   } else {
-    await api('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    await api('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
   }
-  modal.hide();
-  await load();
+  modal.hide(); await load();
 });
 
 document.getElementById('newBtn').addEventListener('click', openNew);
@@ -153,25 +186,5 @@ const signupModal = new bootstrap.Modal(document.getElementById('signupModal'));
 
 document.getElementById('loginBtn').addEventListener('click', () => loginModal.show());
 document.getElementById('signupBtn').addEventListener('click', () => signupModal.show());
-
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const body = { username: document.getElementById('lu').value, password: document.getElementById('lp').value };
-  const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) { alert('Sign in failed'); return; }
-  const data = await r.json();
-  token = data.token; localStorage.setItem('token', token);
-  loginModal.hide(); await load();
-});
-
-document.getElementById('signupForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const body = { username: document.getElementById('su').value, password: document.getElementById('sp').value };
-  const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) { alert(await r.text()); return; }
-  const data = await r.json();
-  token = data.token; localStorage.setItem('token', token);
-  signupModal.hide(); await load();
-});
 
 load();
