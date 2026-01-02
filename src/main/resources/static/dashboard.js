@@ -115,105 +115,57 @@ document.getElementById('toggleSignupPw').addEventListener('click', () => {
 });
 
 let roles = JSON.parse(localStorage.getItem('roles') || '[]');
+let user = JSON.parse(localStorage.getItem('user') || 'null');
 const isAdmin = () => roles.includes('ADMIN');
+const isLogged = () => !!token;
+
+function setAuthUI() {
+  const showAuth = !isLogged();
+  document.getElementById('loginBtn').style.display = showAuth ? '' : 'none';
+  document.getElementById('signupBtn').style.display = showAuth ? '' : 'none';
+  document.getElementById('logoutBtn').style.display = showAuth ? 'none' : '';
+  // New Task should be available only when logged
+  document.getElementById('newBtn').style.display = showAuth ? 'none' : '';
+}
 
 function applyRoleUI() {
-  document.getElementById('adminPanel').style.display = isAdmin() ? '' : 'none';
-  document.getElementById('employeePanel').style.display = isAdmin() ? 'none' : '';
+  setAuthUI();
+  // Public vs personal
+  const publicPanel = document.getElementById('publicPanel');
+  const adminPanel = document.getElementById('adminPanel');
+  const employeePanel = document.getElementById('employeePanel');
+
+  if (!isLogged()) {
+    publicPanel.style.display = '';
+    adminPanel.style.display = 'none';
+    employeePanel.style.display = 'none';
+    return;
+  }
+  publicPanel.style.display = 'none';
+  adminPanel.style.display = isAdmin() ? '' : 'none';
+  employeePanel.style.display = isAdmin() ? 'none' : '';
 }
 
-let statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart;
-
-function renderAdminCharts(s) {
-  // Status pie
-  const dist = s.distribution;
-  const statusCfg = {
-    type: 'pie',
-    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
-      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
-        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
-        borderColor: ['var(--c-open)','var(--c-inp)','var(--c-done)'] }]},
-    options: { plugins: { legend: { position: 'bottom' } } }
-  };
-  if (statusChart) statusChart.destroy();
-  statusChart = new Chart(document.getElementById('statusChart'), statusCfg);
-
-  // Priority bar
-  const pr = s.priorities;
-  const prCfg = {
-    type: 'bar',
-    data: { labels: ['LOW','MEDIUM','HIGH'],
-      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
-        backgroundColor: ['var(--c-low)','var(--c-med)','var(--c-high)'] }]},
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, precision: 0 } } }
-  };
-  if (priorityChart) priorityChart.destroy();
-  priorityChart = new Chart(document.getElementById('priorityChart'), prCfg);
-
-  // Weekly line
-  const w = s.weekly;
-  const wkCfg = {
-    type: 'line',
-    data: {
-      labels: w.labels,
-      datasets: [
-        { label: 'Open', data: w.OPEN, borderColor: 'var(--c-open)', backgroundColor: '#0d6efd33', tension: .3 },
-        { label: 'In progress', data: w.IN_PROGRESS, borderColor: 'var(--c-inp)', backgroundColor: '#ffc10733', tension: .3 },
-        { label: 'Done', data: w.DONE, borderColor: 'var(--c-done)', backgroundColor: '#19875433', tension: .3 }
-      ]
-    },
-    options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true, precision: 0 } } }
-  };
-  if (weeklyChart) weeklyChart.destroy();
-  weeklyChart = new Chart(document.getElementById('weeklyChart'), wkCfg);
-}
-
-function renderEmployeeCharts(s) {
-  const dist = s.distribution;
-  if (meStatusChart) meStatusChart.destroy();
-  meStatusChart = new Chart(document.getElementById('meStatusChart'), {
-    type: 'doughnut',
-    data: { labels: ['OPEN','IN_PROGRESS','DONE'],
-      datasets: [{ data: [dist.OPEN, dist.IN_PROGRESS, dist.DONE],
-        backgroundColor: ['#0d6efd77','#ffc10777','#19875477'],
-        borderColor: ['var(--c-open)','var(--c-inp)','var(--c-done)'] }]},
-    options: { plugins: { legend: { position: 'bottom' } } }
-  });
-
-  const pr = s.priorities;
-  if (mePriorityChart) mePriorityChart.destroy();
-  mePriorityChart = new Chart(document.getElementById('mePriorityChart'), {
-    type: 'bar',
-    data: { labels: ['LOW','MEDIUM','HIGH'],
-      datasets: [{ label: 'Tasks', data: [pr.LOW, pr.MEDIUM, pr.HIGH],
-        backgroundColor: ['var(--c-low)','var(--c-med)','var(--c-high)'] }]},
-    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, precision: 0 } } }
-  });
-}
-
-async function loadAdmin() {
-  const s = await api('/api/stats/admin');
-  document.getElementById('adminTotal').textContent = s.total;
-  document.getElementById('adminAssigned').textContent = s.assigned;
-  document.getElementById('adminDone').textContent = s.done;
-  document.getElementById('adminRunning').textContent = (s.total - s.done);
-  renderAdminCharts(s);
-}
-
-async function loadEmployee() {
-  tasks = await api('/api/tasks');
-  render();
-  const s = await api('/api/stats/me');
-  renderEmployeeCharts(s);
-}
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  // clear auth and UI
+  token = ''; roles = []; user = null;
+  localStorage.removeItem('token');
+  localStorage.removeItem('roles');
+  localStorage.removeItem('user');
+  // destroy charts if present
+  [statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart].forEach(c => { try { c?.destroy(); } catch {} });
+  // reset table
+  tasks = []; render();
+  applyRoleUI();
+});
 
 async function load() {
   applyRoleUI();
-  if (isAdmin()) { await loadAdmin(); }
-  else { await loadEmployee(); }
+  if (!isLogged()) return;
+  if (isAdmin()) { await loadAdmin(); } else { await loadEmployee(); }
 }
 
-// store roles at auth
+// store roles and user at auth
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const body = { username: document.getElementById('lu').value.trim(), password: document.getElementById('lp').value };
@@ -221,20 +173,31 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   if (!r.ok) { err.textContent = 'Invalid credentials'; err.style.display = 'block'; return; }
   const data = await r.json();
-  token = data.token; roles = data.roles || []; localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles));
+  token = data.token; roles = data.roles || []; user = data.user || null;
+  localStorage.setItem('token', token);
+  localStorage.setItem('roles', JSON.stringify(roles));
+  localStorage.setItem('user', JSON.stringify(user));
   loginModal.hide(); await load();
 });
 
 document.getElementById('signupForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const name = document.getElementById('sn').value.trim();
+  const email = document.getElementById('se').value.trim();
   const u = document.getElementById('su').value.trim();
   const p = document.getElementById('sp').value;
   const err = document.getElementById('signupError'); err.style.display = 'none';
   if (p.length < 8) { err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; return; }
-  const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u, password: p }) });
+  const r = await fetch('/auth/signup', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, username: u, password: p })
+  });
   if (!r.ok) { err.textContent = await r.text(); err.style.display = 'block'; return; }
   const data = await r.json();
-  token = data.token; roles = data.roles || []; localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles));
+  token = data.token; roles = data.roles || []; user = data.user || null;
+  localStorage.setItem('token', token);
+  localStorage.setItem('roles', JSON.stringify(roles));
+  localStorage.setItem('user', JSON.stringify(user));
   signupModal.hide(); await load();
 });
 

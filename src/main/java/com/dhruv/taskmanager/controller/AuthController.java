@@ -21,16 +21,29 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody Map<String,String> body) {
-        String u = body.get("username"), p = body.get("password");
-        if (u == null || p == null) return ResponseEntity.badRequest().body("username/password required");
-        if (users.findByUsername(u).isPresent()) return ResponseEntity.badRequest().body("username taken");
+        String name = body.get("name");
+        String email = body.get("email");
+        String u = body.get("username");
+        String p = body.get("password");
+        if (name == null || email == null || u == null || p == null)
+            return ResponseEntity.badRequest().body("name/email/username/password required");
+        if (users.findByUsername(u).isPresent())
+            return ResponseEntity.badRequest().body("username taken");
+
         User user = new User();
+        user.setName(name);
+        user.setEmail(email);
         user.setUsername(u);
         user.setPassword(encoder.encode(p));
         user.setRoles(Set.of("USER"));
         users.save(user);
+
         String token = jwt.createToken(u, user.getRoles());
-        return ResponseEntity.ok(Map.of("token", token, "roles", user.getRoles()));
+        return ResponseEntity.ok(Map.of(
+            "token", token,
+            "roles", user.getRoles(),
+            "user", Map.of("name", user.getName(), "username", user.getUsername(), "email", user.getEmail())
+        ));
     }
 
     @PostMapping("/login")
@@ -39,7 +52,12 @@ public class AuthController {
         var user = users.findByUsername(u).orElse(null);
         if (user == null || !encoder.matches(p, user.getPassword()))
             return ResponseEntity.status(401).body("invalid credentials");
+
         String token = jwt.createToken(u, user.getRoles());
-        return ResponseEntity.ok(Map.of("token", token, "roles", user.getRoles()));
+        return ResponseEntity.ok(Map.of(
+            "token", token,
+            "roles", user.getRoles(),
+            "user", Map.of("name", user.getName(), "username", user.getUsername(), "email", user.getEmail())
+        ));
     }
 }
