@@ -3,14 +3,15 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TaskManager – Organize your work</title>
+  <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/svg/2705.svg">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="/main.css">
 </head>
-<body class="bg-body">
-  <nav class="navbar navbar-dark bg-dark">
+<body class="bg-landing">
+  <nav class="navbar navbar-dark bg-dark fixed-top shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="/">TaskManager</a>
+      <a class="navbar-brand fw-semibold" href="/">TaskManager</a>
       <div class="d-flex gap-2">
         <a class="btn btn-outline-light" href="/login">Login</a>
         <a class="btn btn-primary" href="/signup">Sign up</a>
@@ -18,41 +19,95 @@
     </div>
   </nav>
 
-  <section class="container py-5">
-    <div class="row align-items-center">
+  <header class="hero container reveal" style="padding-top:96px">
+    <div class="row align-items-center gy-4">
       <div class="col-lg-6">
-        <h1 class="display-6 fw-bold">Organize your work. Focus on what matters.</h1>
-        <p class="text-muted">A simple, secure task manager to plan, track, and complete your work efficiently.</p>
-        <div class="d-flex gap-2">
-          <a class="btn btn-primary btn-lg" href="/signup">Get Started</a>
-          <a class="btn btn-outline-secondary btn-lg" href="/login">Login</a>
+        <span class="badge text-bg-primary-soft mb-3"><i class="bi bi-stars me-1"></i> New</span>
+        <h1 class="display-5 fw-bold lh-sm">Organize your work. Focus on what matters.</h1>
+        <p class="text-muted fs-5">A simple, secure task manager to plan, track, and complete your work efficiently.</p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary btn-lg" href="/signup"><i class="bi bi-rocket-takeoff me-2"></i>Get Started</a>
+          <a class="btn btn-outline-light btn-lg" href="/login"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a>
+        </div>
+        <div class="d-flex gap-3 mt-4 small text-white-50">
+          <span><i class="bi bi-shield-lock me-1"></i>JWT Auth</span>
+          <span><i class="bi bi-speedometer2 me-1"></i>Fast</span>
+          <span><i class="bi bi-cloud-check me-1"></i>MongoDB</span>
         </div>
       </div>
       <div class="col-lg-6">
-        <img class="img-fluid rounded shadow" alt="Dashboard preview"
-             src="https://dummyimage.com/900x420/f2f4f8/aaaaaa&text=Dashboard+Preview">
+        <!-- Modern screenshot/mockup -->
+        <div class="mockup shadow-lg border-0 overflow-hidden">
+          <img class="w-100" alt="Dashboard preview"
+               src="https://images.unsplash.com/photo-1553877522-43269d4ea984?q=80&w=1400&auto=format&fit=crop">
+          <div class="mockup-overlay">
+            <div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="features" class="container py-5 reveal">
+    <div class="text-center mb-4">
+      <h2 class="fw-semibold">Everything you need to get work done</h2>
+      <p class="text-muted">Plan. Track. Deliver.</p>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feat-icon bg-primary-subtle text-primary"><i class="bi bi-ui-checks-grid"></i></div>
+            <h6 class="mt-2">Create & manage tasks</h6>
+            <p class="small text-muted">Fast CRUD with priority, assignee and due dates.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feat-icon bg-warning-subtle text-warning"><i class="bi bi-arrow-repeat"></i></div>
+            <h6 class="mt-2">Track progress</h6>
+            <p class="small text-muted">OPEN → IN_PROGRESS → DONE with guard rails.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feat-icon bg-info-subtle text-info"><i class="bi bi-people"></i></div>
+            <h6 class="mt-2">Assign tasks</h6>
+            <p class="small text-muted">Work together and filter by assignee.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card h-100 feature-card">
+          <div class="card-body">
+            <div class="feat-icon bg-success-subtle text-success"><i class="bi bi-shield-check"></i></div>
+            <h6 class="mt-2">Secure authentication</h6>
+            <p class="small text-muted">JWT + role-based access on Spring Security.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="features" class="container py-4">
-    <div class="row g-3">
-      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>✅ Create & manage tasks</h6><p class="small text-muted">Fast CRUD with priority and due dates.</p></div></div></div>
-      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>🔁 Track task progress</h6><p class="small text-muted">OPEN → IN_PROGRESS → DONE flow.</p></div></div></div>
-      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>👥 Assign tasks</h6><p class="small text-muted">Assign and filter by assignee.</p></div></div></div>
-      <div class="col-md-3"><div class="card h-100"><div class="card-body"><h6>🔒 Secure authentication</h6><p class="small text-muted">JWT + role-based access.</p></div></div></div>
-    </div>
-  </section>
-
-  <footer class="border-top py-4 mt-4">
-    <div class="container d-flex justify-content-between align-items-center">
-      <div class="small text-muted">© 2026 TaskManager</div>
-      <div class="small">
-        <a class="me-3" href="https://github.com/" target="_blank">GitHub</a>
-        <a class="me-3" href="https://linkedin.com/" target="_blank">LinkedIn</a>
-        <span class="text-muted">Spring Boot · MongoDB · JWT · Thymeleaf</span>
+  <footer class="border-top py-4 mt-5">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center small">
+      <div class="text-muted">© 2026 TaskManager</div>
+      <div class="d-flex gap-3">
+        <a class="link-light" href="https://github.com/" target="_blank"><i class="bi bi-github me-1"></i>GitHub</a>
+        <a class="link-light" href="https://linkedin.com/" target="_blank"><i class="bi bi-linkedin me-1"></i>LinkedIn</a>
+        <span class="text-white-50">Spring Boot · MongoDB · JWT · Thymeleaf</span>
       </div>
     </div>
   </footer>
+
+  <!-- Tiny on-scroll animation (vanilla, no deps) -->
+  <script>
+    const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && e.target.classList.add('reveal-in')), { threshold: .15 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  </script>
 </body>
 </html>

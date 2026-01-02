@@ -1,5 +1,6 @@
-/* dashboard.js – robust (guards all selectors) */
 'use strict';
+
+/* Dashboard interactions — Bootstrap 5 + vanilla JS only */
 
 // Globals
 let tasks = [];
@@ -9,33 +10,65 @@ let user = JSON.parse(localStorage.getItem('user') || 'null');
 const isAdmin = () => roles.includes('ADMIN');
 const isLogged = () => !!token;
 
-// Bootstrap modals (guard if element exists)
+// Bootstrap modals (guard existence)
 const taskModalEl = document.getElementById('taskModal');
 const taskModal = taskModalEl ? new bootstrap.Modal(taskModalEl) : null;
-const loginModal = document.getElementById('loginModal') ? new bootstrap.Modal(document.getElementById('loginModal')) : null;
-const signupModal = document.getElementById('signupModal') ? new bootstrap.Modal(document.getElementById('signupModal')) : null;
+const loginModalEl = document.getElementById('loginModal');
+const loginModal = loginModalEl ? new bootstrap.Modal(loginModalEl) : null;
+const signupModalEl = document.getElementById('signupModal');
+const signupModal = signupModalEl ? new bootstrap.Modal(signupModalEl) : null;
+const calendarModalEl = document.getElementById('calendarModal');
+const calendarModal = calendarModalEl ? new bootstrap.Modal(calendarModalEl) : null;
 
 // Charts
 let statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart;
 
-// API helper
+/* ------------- utilities ------------- */
+function showLoader(on = true) {
+  const el = document.getElementById('loadingOverlay');
+  if (el) el.style.display = on ? 'grid' : 'none';
+}
+function toast(msg, type = 'success') {
+  const cont = document.getElementById('toastContainer'); if (!cont) return;
+  const t = document.createElement('div');
+  t.className = `toast align-items-center text-white border-0 ${type}`;
+  t.setAttribute('role', 'alert'); t.setAttribute('aria-live', 'assertive'); t.setAttribute('aria-atomic', 'true');
+  t.innerHTML = `<div class="d-flex">
+    <div class="toast-body">${msg}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>`;
+  cont.appendChild(t);
+  new bootstrap.Toast(t, { delay: 2400 }).show();
+  t.addEventListener('hidden.bs.toast', () => t.remove());
+}
+
 async function api(path, opt = {}) {
   opt.headers = Object.assign({}, opt.headers || {});
   if (!opt.method) opt.method = 'GET';
   if (token) opt.headers['Authorization'] = 'Bearer ' + token;
-  const res = await fetch(path, opt);
-  if (!res.ok) throw new Error(await res.text());
-  return res.status === 204 ? null : res.json();
+  try {
+    showLoader(true);
+    const res = await fetch(path, opt);
+    const txt = await res.text();
+    if (!res.ok) throw new Error(txt || 'Request failed');
+    return txt ? JSON.parse(txt) : null;
+  } finally {
+    showLoader(false);
+  }
 }
 
-// Utilities
 function fmtDate(d) {
   if (!d) return '';
   const dt = new Date(d);
   return dt.toLocaleDateString();
 }
+function toLocalDateString(val) {
+  if (!val) return '';
+  const d = new Date(val); d.setHours(0,0,0,0);
+  return d.toISOString().slice(0,10);
+}
 
-// Auth UI
+/* ------------- auth + theme ------------- */
 function setAuthUI() {
   const showAuth = !isLogged();
   const L = id => document.getElementById(id);
@@ -44,8 +77,14 @@ function setAuthUI() {
   if (L('logoutBtn')) L('logoutBtn').style.display = showAuth ? 'none' : '';
   if (L('newBtn')) L('newBtn').style.display = showAuth ? 'none' : '';
   if (L('menuAdmin')) L('menuAdmin').style.display = isAdmin() ? '' : 'none';
-}
 
+  // Profile fill
+  if (user) {
+    document.getElementById('p_name')?.replaceChildren(document.createTextNode(user.name || '—'));
+    document.getElementById('p_email')?.replaceChildren(document.createTextNode(user.email || '—'));
+    document.getElementById('p_user')?.replaceChildren(document.createTextNode(user.username || '—'));
+  }
+}
 function applyRoleUI() {
   setAuthUI();
   const pub = document.getElementById('publicPanel');
@@ -64,7 +103,32 @@ function applyRoleUI() {
   emp.style.display = isAdmin() ? 'none' : '';
 }
 
-// Rendering
+// Dark mode
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  const toggle = document.getElementById('darkToggle');
+  if (toggle) toggle.checked = saved === 'dark';
+})();
+document.getElementById('darkToggle')?.addEventListener('change', (e) => {
+  const theme = e.target.checked ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('theme', theme);
+  toast(`Switched to ${theme} mode`);
+});
+
+/* ------------- filters ------------- */
+function currentFilters() {
+  const q = (document.getElementById('q')?.value || '').toLowerCase();
+  const st = document.getElementById('status')?.value || '';
+  const pr = document.getElementById('priority')?.value || '';
+  const from = document.getElementById('fromDate')?.value || '';
+  const to   = document.getElementById('toDate')?.value || '';
+  const sort = document.getElementById('sortBy')?.value || '';
+  return { q, st, pr, from, to, sort };
+}
+
+/* ------------- rendering ------------- */
 function render() {
   const totalEl = document.getElementById('total');
   const doneEl = document.getElementById('done');
@@ -73,15 +137,39 @@ function render() {
   if (doneEl) doneEl.textContent = tasks.filter(t => t.status === 'DONE').length;
   if (openEl) openEl.textContent = tasks.filter(t => t.status !== 'DONE').length;
 
-  const q = (document.getElementById('q')?.value || '').toLowerCase();
-  const st = document.getElementById('status')?.value || '';
-  const pr = document.getElementById('priority')?.value || '';
+  const { q, st, pr, from, to, sort } = currentFilters();
 
-  const filtered = tasks.filter(t =>
+  // Filter pipeline
+  let filtered = tasks.filter(t =>
     (!q || (t.title ?? '').toLowerCase().includes(q) || (t.assignee ?? '').toLowerCase().includes(q)) &&
     (!st || t.status === st) &&
     (!pr || t.priority === pr)
   );
+  // Date range
+  if (from || to) {
+    const fromD = from ? new Date(from) : null;
+    const toD   = to ? new Date(to) : null;
+    filtered = filtered.filter(t => {
+      if (!t.dueDate) return false;
+      const d = new Date(t.dueDate);
+      if (fromD && d < new Date(fromD.getFullYear(), fromD.getMonth(), fromD.getDate())) return false;
+      if (toD && d > new Date(toD.getFullYear(), toD.getMonth(), toD.getDate(), 23,59,59)) return false;
+      return true;
+    });
+  }
+  // Sorting
+  const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+  const statusOrder = { OPEN: 0, IN_PROGRESS: 1, DONE: 2 };
+  filtered.sort((a,b) => {
+    switch (sort) {
+      case 'dueAsc':  return new Date(a.dueDate||0) - new Date(b.dueDate||0);
+      case 'dueDesc': return new Date(b.dueDate||0) - new Date(a.dueDate||0);
+      case 'priority': return (priorityOrder[a.priority||'MEDIUM'] ?? 9) - (priorityOrder[b.priority||'MEDIUM'] ?? 9);
+      case 'status': return (statusOrder[a.status||'OPEN'] ?? 9) - (statusOrder[b.status||'OPEN'] ?? 9);
+      case 'title': return (a.title||'').localeCompare(b.title||'');
+      default: return 0;
+    }
+  });
 
   const tbody = document.querySelector('#tasksTable tbody');
   if (!tbody) return;
@@ -95,9 +183,9 @@ function render() {
       <td>${fmtDate(t.dueDate)}</td>
       <td>${t.assignee ?? ''}</td>
       <td class="text-end">
-        <button class="btn btn-sm btn-outline-success me-1" data-action="done" data-id="${t.id}"><i class="bi bi-check2"></i></button>
-        <button class="btn btn-sm btn-outline-primary me-1" data-action="edit" data-id="${t.id}"><i class="bi bi-pencil"></i></button>
-        <button class="btn btn-sm btn-outline-danger" data-action="del" data-id="${t.id}"><i class="bi bi-trash"></i></button>
+        <button class="btn btn-sm btn-outline-success me-1" data-action="done" data-id="${t.id}" title="Mark done"><i class="bi bi-check2"></i></button>
+        <button class="btn btn-sm btn-outline-primary me-1" data-action="edit" data-id="${t.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+        <button class="btn btn-sm btn-outline-danger" data-action="del" data-id="${t.id}" title="Delete"><i class="bi bi-trash"></i></button>
       </td>`;
     tbody.appendChild(tr);
   });
@@ -110,22 +198,30 @@ function render() {
   if (tableWrap) tableWrap.style.display = empty ? 'none' : '';
 }
 
-// Loaders
+/* ------------- loaders ------------- */
 async function loadAdmin() {
-  const s = await api('/api/stats/admin');
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-  set('adminTotal', s.total);
-  set('adminAssigned', s.assigned);
-  set('adminDone', s.done);
-  set('adminRunning', s.total - s.done);
-  renderAdminCharts(s);
+  try {
+    const s = await api('/api/stats/admin');
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('adminTotal', s.total);
+    set('adminAssigned', s.assigned);
+    set('adminDone', s.done);
+    set('adminRunning', s.total - s.done);
+    renderAdminCharts(s);
+  } catch (e) {
+    toast(e.message || 'Failed to load admin stats', 'error');
+  }
 }
 
 async function loadEmployee() {
-  tasks = await api('/api/tasks');
-  render();
-  const s = await api('/api/stats/me');
-  renderEmployeeCharts(s);
+  try {
+    tasks = await api('/api/tasks');
+    render();
+    const s = await api('/api/stats/me');
+    renderEmployeeCharts(s);
+  } catch (e) {
+    toast(e.message || 'Failed to load tasks', 'error');
+  }
 }
 
 async function load() {
@@ -134,7 +230,7 @@ async function load() {
   if (isAdmin()) await loadAdmin(); else await loadEmployee();
 }
 
-// Charts
+/* ------------- charts ------------- */
 function renderAdminCharts(s) {
   const ctxPie = document.getElementById('statusChart');
   const ctxBar = document.getElementById('priorityChart');
@@ -173,12 +269,10 @@ function renderAdminCharts(s) {
     options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { beginAtZero: true } } }
   });
 }
-
 function renderEmployeeCharts(s) {
   const ctxMe1 = document.getElementById('meStatusChart');
   const ctxMe2 = document.getElementById('mePriorityChart');
   if (!ctxMe1 || !ctxMe2) return;
-
   const dist = s.distribution, pr = s.priorities;
 
   if (meStatusChart) meStatusChart.destroy();
@@ -201,7 +295,7 @@ function renderEmployeeCharts(s) {
   });
 }
 
-// Task CRUD helpers
+/* ------------- task CRUD ------------- */
 function openNew() {
   if (!taskModal) return;
   document.getElementById('modalTitle').textContent = 'New Task';
@@ -214,7 +308,6 @@ function openNew() {
   document.getElementById('assignee').value = '';
   taskModal.show();
 }
-
 function editTask(id) {
   if (!taskModal) return;
   const t = tasks.find(x => x.id === id);
@@ -225,25 +318,33 @@ function editTask(id) {
   document.getElementById('description').value = t.description ?? '';
   document.getElementById('statusInput').value = t.status ?? 'OPEN';
   document.getElementById('priorityInput').value = t.priority ?? 'MEDIUM';
-  document.getElementById('dueDate').value = t.dueDate ? new Date(t.dueDate).toISOString().slice(0,10) : '';
+  document.getElementById('dueDate').value = toLocalDateString(t.dueDate);
   document.getElementById('assignee').value = t.assignee ?? '';
   taskModal.show();
 }
-
 async function markDone(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  await api(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...t, status: 'DONE' }) });
-  await loadEmployee();
+  try {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    await api(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...t, status: 'DONE' }) });
+    toast('Task marked as done');
+    await loadEmployee();
+  } catch (e) {
+    toast(e.message || 'Failed to mark done', 'error');
+  }
 }
-
 async function delTask(id) {
-  if (!confirm('Delete this task?')) return;
-  await api(`/api/tasks/${id}`, { method: 'DELETE' });
-  await loadEmployee();
+  try {
+    if (!confirm('Delete this task?')) return;
+    await api(`/api/tasks/${id}`, { method: 'DELETE' });
+    toast('Task deleted', 'success');
+    await loadEmployee();
+  } catch (e) {
+    toast(e.message || 'Delete failed', 'error');
+  }
 }
 
-// Business rules
+/* ------------- validations ------------- */
 function validateDueDate(dateStr) {
   if (!dateStr) return true;
   const sel = new Date(dateStr); sel.setHours(0,0,0,0);
@@ -252,15 +353,19 @@ function validateDueDate(dateStr) {
 }
 const FLOW = { OPEN: ['OPEN', 'IN_PROGRESS'], IN_PROGRESS: ['IN_PROGRESS', 'DONE'], DONE: ['DONE'] };
 
-// Events (guarded)
+/* ------------- events ------------- */
 document.getElementById('newBtn')?.addEventListener('click', openNew);
+document.getElementById('menuCreate')?.addEventListener('click', openNew);
 document.getElementById('emptyCreateBtn')?.addEventListener('click', openNew);
-document.getElementById('q')?.addEventListener('input', render);
-document.getElementById('status')?.addEventListener('change', render);
-document.getElementById('priority')?.addEventListener('change', render);
+
+// Filters
+['q','status','priority','fromDate','toDate','sortBy'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', render);
+  document.getElementById(id)?.addEventListener('change', render);
+});
 document.getElementById('clearFilters')?.addEventListener('click', () => {
-  const q = document.getElementById('q'); const st = document.getElementById('status'); const pr = document.getElementById('priority');
-  if (q) q.value = ''; if (st) st.value = ''; if (pr) pr.value = ''; render();
+  ['q','status','priority','fromDate','toDate','sortBy'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  render();
 });
 document.getElementById('globalSearch')?.addEventListener('input', (e) => {
   const qEl = document.getElementById('q'); if (qEl) { qEl.value = e.target.value; render(); }
@@ -275,7 +380,7 @@ document.querySelector('#tasksTable tbody')?.addEventListener('click', (e) => {
   if (act === 'del') delTask(id);
 });
 
-// Auth modals openers (fallback to page links if modals absent)
+// Auth modal openers (fallback to pages)
 document.getElementById('loginBtn')?.addEventListener('click', () => loginModal ? loginModal.show() : (location.href = '/login'));
 document.getElementById('signupBtn')?.addEventListener('click', () => signupModal ? signupModal.show() : (location.href = '/signup'));
 document.getElementById('publicLogin')?.addEventListener('click', () => loginModal ? loginModal.show() : (location.href = '/login'));
@@ -295,61 +400,95 @@ document.getElementById('logoutBtn')?.addEventListener('click', () => {
   localStorage.removeItem('token'); localStorage.removeItem('roles'); localStorage.removeItem('user');
   [statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart].forEach(c => { try { c?.destroy(); } catch {} });
   tasks = []; render(); applyRoleUI();
+  toast('Logged out', 'success');
 });
 
 // Login (modal)
 document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const body = { username: document.getElementById('lu').value.trim(), password: document.getElementById('lp').value };
+  const u = document.getElementById('lu'); const p = document.getElementById('lp');
+  if (!u.value) u.classList.add('is-invalid'); else u.classList.remove('is-invalid');
+  if (!p.value) p.classList.add('is-invalid'); else p.classList.remove('is-invalid');
+  if (!u.value || !p.value) return;
+
   const err = document.getElementById('loginError'); if (err) err.style.display = 'none';
-  const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!r.ok) { if (err) { err.textContent = 'Invalid credentials'; err.style.display = 'block'; } return; }
-  const data = await r.json();
-  token = data.token; roles = data.roles || []; user = data.user || null;
-  localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
-  loginModal?.hide(); await load();
+  try {
+    const r = await fetch('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: u.value.trim(), password: p.value }) });
+    if (!r.ok) throw new Error('Invalid credentials');
+    const data = await r.json();
+    token = data.token; roles = data.roles || []; user = data.user || null;
+    localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
+    loginModal?.hide(); toast('Welcome back!');
+    await load();
+  } catch (ex) {
+    if (err) { err.textContent = ex.message; err.style.display = 'block'; }
+    toast('Login failed', 'error');
+  }
 });
 
 // Signup (modal)
+document.getElementById('sp')?.addEventListener('input', (e) => {
+  const v = e.target.value.length;
+  document.getElementById('pwStrength').textContent = v < 8 ? 'Weak password' : (v < 12 ? 'Good password' : 'Strong password');
+});
 document.getElementById('signupForm')?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = document.getElementById('sn').value.trim();
-  const email = document.getElementById('se').value.trim();
-  const u = document.getElementById('su').value.trim();
-  const p = document.getElementById('sp').value;
+  const name = document.getElementById('sn'); const email = document.getElementById('se');
+  const u = document.getElementById('su'); const p = document.getElementById('sp');
+  [name, email, u, p].forEach(el => { if (!el.value) el.classList.add('is-invalid'); else el.classList.remove('is-invalid'); });
   const err = document.getElementById('signupError'); if (err) err.style.display = 'none';
-  if (p.length < 8) { if (err) { err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; } return; }
-  const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, email, username: u, password: p }) });
-  if (!r.ok) { if (err) { err.textContent = await r.text(); err.style.display = 'block'; } return; }
-  const data = await r.json();
-  token = data.token; roles = data.roles || []; user = data.user || null;
-  localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
-  signupModal?.hide(); await load();
-});
+  if (p.value.length < 8) { if (err) { err.textContent = 'Password must be at least 8 characters'; err.style.display = 'block'; } return; }
 
-// Task form submit
-document.getElementById('taskForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const id = document.getElementById('taskId').value;
-  const payload = {
-    title: document.getElementById('title').value.trim(),
-    description: document.getElementById('description').value,
-    status: document.getElementById('statusInput').value,
-    priority: document.getElementById('priorityInput').value,
-    dueDate: document.getElementById('dueDate').value ? new Date(document.getElementById('dueDate').value).toISOString() : null,
-    assignee: document.getElementById('assignee').value
-  };
-  if (!validateDueDate(document.getElementById('dueDate').value)) { alert('Due date cannot be in the past'); return; }
-  if (id) {
-    const prev = tasks.find(t => t.id === id)?.status ?? 'OPEN';
-    if (!FLOW[prev].includes(payload.status)) { alert(`Invalid status transition ${prev} → ${payload.status}`); return; }
-    await api(`/api/tasks/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, id }) });
-  } else {
-    await api('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  try {
+    const r = await fetch('/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: name.value.trim(), email: email.value.trim(), username: u.value.trim(), password: p.value }) });
+    if (!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+    token = data.token; roles = data.roles || []; user = data.user || null;
+    localStorage.setItem('token', token); localStorage.setItem('roles', JSON.stringify(roles)); localStorage.setItem('user', JSON.stringify(user));
+    signupModal?.hide(); toast('Account created!');
+    await load();
+  } catch (ex) {
+    if (err) { err.textContent = ex.message; err.style.display = 'block'; }
+    toast('Signup failed', 'error');
   }
-  taskModal?.hide(); await load();
 });
 
-// Initial
+/* ------------- calendar ------------- */
+function buildCalendarGrid(items) {
+  const grid = document.getElementById('calendarGrid'); if (!grid) return;
+  grid.innerHTML = '';
+  const today = new Date(); const year = today.getFullYear(); const month = today.getMonth();
+  const first = new Date(year, month, 1); const startDay = (first.getDay()+6)%7; // Monday-first grid
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+
+  for (let i=0;i<startDay;i++) grid.appendChild(document.createElement('div')); // leading blanks
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const cell = document.createElement('div'); cell.className='day';
+    const date = new Date(year, month, d);
+    const iso = date.toISOString().slice(0,10);
+    cell.innerHTML = `<span class="date">${d}</span>`;
+    const dayTasks = items.filter(t => toLocalDateString(t.dueDate) === iso);
+    dayTasks.slice(0,3).forEach(t => {
+      const pill = document.createElement('span');
+      pill.className = `pill ${t.priority==='HIGH'?'pill-high':t.priority==='MEDIUM'?'pill-med':'pill-low'}`;
+      pill.textContent = t.title;
+      cell.appendChild(pill);
+    });
+    if (dayTasks.length > 3) {
+      const more = document.createElement('span'); more.className='pill pill-low'; more.textContent = `+${dayTasks.length-3} more`;
+      cell.appendChild(more);
+    }
+    grid.appendChild(cell);
+  }
+}
+document.getElementById('calendarBtn')?.addEventListener('click', async () => {
+  if (!isLogged()) return;
+  if (!tasks.length) await loadEmployee();
+  buildCalendarGrid(tasks);
+  calendarModal?.show();
+});
+
+/* ------------- init ------------- */
 applyRoleUI();
 load();
