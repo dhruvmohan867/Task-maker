@@ -105,18 +105,33 @@ function applyRoleUI() {
   emp.style.display = isAdmin() ? 'none' : '';
 }
 
-// Dark mode
+// Theme helpers
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  // Sync Bootstrap navbar classes (dark ↔ light)
+  document.querySelectorAll('.navbar').forEach(n => {
+    n.classList.remove('navbar-dark','bg-dark','navbar-light','bg-light');
+    if (theme === 'dark') n.classList.add('navbar-dark','bg-dark');
+    else n.classList.add('navbar-light','bg-light');
+  });
+}
+
 (function initTheme() {
   const saved = localStorage.getItem('theme') || 'light';
-  document.documentElement.setAttribute('data-theme', saved);
+  setTheme(saved);
   const toggle = document.getElementById('darkToggle');
   if (toggle) toggle.checked = saved === 'dark';
 })();
-document.getElementById('darkToggle')?.addEventListener('change', (e) => {
-  const theme = e.target.checked ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem('theme', theme);
-  // removed success toast on theme toggle
+
+document.addEventListener('DOMContentLoaded', () => {
+  const toggle = document.getElementById('darkToggle');
+  if (toggle) {
+    toggle.addEventListener('change', (e) => {
+      const theme = e.target.checked ? 'dark' : 'light';
+      setTheme(theme);
+      localStorage.setItem('theme', theme);
+    });
+  }
 });
 
 /* ------------- filters ------------- */
