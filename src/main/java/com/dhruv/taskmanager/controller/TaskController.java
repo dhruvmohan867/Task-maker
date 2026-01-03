@@ -17,25 +17,20 @@ import com.dhruv.taskmanager.service.TaskService;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
-
     private final TaskService service;
 
     public TaskController(TaskService service) {
         this.service = service;
     }
 
-    /* ================= GET ALL ================= */
-
     @GetMapping
     public ResponseEntity<List<Task>> list(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
         List<Task> tasks = isAdmin()
                 ? service.all()
-                : service.ensureSample(Objects.requireNonNull(principal.getName()));
-
+                : service.byOwner(Objects.requireNonNull(principal.getName())); // changed from ensureSample(...)
         return ResponseEntity.ok(tasks);
     }
 

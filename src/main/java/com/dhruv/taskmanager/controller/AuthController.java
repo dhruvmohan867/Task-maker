@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.dhruv.taskmanager.model.User;
 import com.dhruv.taskmanager.repository.UserRepository;
-import com.dhruv.taskmanager.security.JwtService;
+import com.dhruv.taskmanager.security.JwtSecurity;
 import com.dhruv.taskmanager.service.TaskService;
 
 @RestController
@@ -15,10 +15,10 @@ import com.dhruv.taskmanager.service.TaskService;
 public class AuthController {
     private final UserRepository users;
     private final PasswordEncoder encoder;
-    private final JwtService jwt;
+    private final JwtSecurity jwt;
     private final TaskService tasks;
 
-    public AuthController(UserRepository users, PasswordEncoder encoder, JwtService jwt, TaskService tasks) {
+    public AuthController(UserRepository users, PasswordEncoder encoder, JwtSecurity jwt, TaskService tasks) {
         this.users = users; this.encoder = encoder; this.jwt = jwt; this.tasks = tasks;
     }
 
@@ -40,9 +40,6 @@ public class AuthController {
         user.setPassword(encoder.encode(p));
         user.setRoles(Set.of("USER"));
         users.save(user);
-
-        // create sample tasks for the new user
-        tasks.ensureSample(u);
 
         String token = jwt.createToken(u, user.getRoles());
         return ResponseEntity.ok(Map.of(

@@ -19,11 +19,11 @@
 }
 
 html[data-theme="dark"] {
-  --card:#111827;
-  --text:#e5e7eb;
-  --muted:#cbd5e1;
-  --grad-1:#0b1020;
-  --grad-2:#0c1326;
+  --card:#000000;
+  --text:#ffffff;
+  --muted:#aaaaaa;
+  --grad-1:#000000;
+  --grad-2:#000000;
 }
 
 /* Landing */
@@ -44,7 +44,7 @@ html[data-theme="dark"] {
 
 /* App */
 body.bg-body { background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%); }
-html[data-theme="dark"] body.bg-body { background: linear-gradient(135deg, #0b1020 0%, #0c1326 100%); }
+html[data-theme="dark"] body.bg-body { background: #000000; }
 .navbar { box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .navbar .btn { min-width: 100px; }
 .card { border: 1px solid #e9eef4; background: var(--card); color: var(--text); }
@@ -57,7 +57,7 @@ html[data-theme="dark"] body.bg-body { background: linear-gradient(135deg, #0b10
 .badge-status.DONE { background:#1987541a;color:#198754; }
 
 .table-modern tbody tr:hover { background-color: #f7f9fb; }
-html[data-theme="dark"] .table-modern tbody tr:hover { background-color: #0f172a; }
+html[data-theme="dark"] .table-modern tbody tr:hover { background-color: #111111; }
 .input-group .btn { border-color: #ced4da; }
 
 /* Sticky side card */
@@ -68,7 +68,7 @@ html[data-theme="dark"] .table-modern tbody tr:hover { background-color: #0f172a
   position: fixed; inset: 0; background: rgba(255,255,255,.7);
   display: grid; place-items: center; z-index: 2000; flex-direction: column;
 }
-html[data-theme="dark"] .loading-overlay { background: rgba(0,0,0,.45); color:#fff; }
+html[data-theme="dark"] .loading-overlay { background: rgba(0,0,0,.85); color:#fff; }
 
 /* Calendar */
 .calendar-grid {
@@ -89,7 +89,11 @@ html[data-theme="dark"] .loading-overlay { background: rgba(0,0,0,.45); color:#f
 /* Dark mode specifics */
 html[data-theme="dark"] .card,
 html[data-theme="dark"] .table,
-html[data-theme="dark"] .modal-content { color:#e5e7eb; border-color:#1f2937; }
+html[data-theme="dark"] .modal-content {
+  color:#ffffff;
+  border-color:#222222;
+  background-color:#000000;
+}
 
 /* Toast style (Bootstrap container used in HTML) */
 .toast.success { --bs-toast-bg: #198754; --bs-toast-color: #fff; }
