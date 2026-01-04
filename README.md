@@ -4,6 +4,13 @@ A modern task manager with a clean web UI (Thymeleaf + Bootstrap), JWT authentic
 
 ---
 
+### Landing Page
+![Landing Page](docs/images/landing.png)
+
+### Dashboard
+![Dashboard](docs/images/dashboard.png)
+
+
 ## Table of Contents
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -50,11 +57,6 @@ UI routes: [`com.dhruv.taskmanager.controller.ViewController`](src/main/java/com
 You can include screenshots in the README (recommended). Add images under `docs/images/` and uncomment the section below. -->
 
 
-### Landing Page
-![Landing Page](docs/images/landing.png)
-
-### Dashboard
-![Dashboard](docs/images/dashboard.png)
 
 
 **How to add screenshots**
