@@ -31,6 +31,69 @@ function safeRun(label, fn) {
   }
 }
 
+/**
+ * Safe async runner:
+ * - catches promise rejections so buttons never "silently fail"
+ * - prevents one failing endpoint from breaking interactivity
+ */
+async function safeRunAsync(label, fn) {
+  try {
+    return typeof fn === 'function' ? await fn() : undefined;
+  } catch (err) {
+    console.error(`[safeRunAsync] ${label}`, err);
+    toast(err?.message || `${label} failed`, 'error');
+    return undefined;
+  }
+}
+
+/** Prevent double-binding (common when dashboard.js gets merged/duplicated) */
+function bindOnce(key, binder) {
+  const k = `__bound_${key}`;
+  if (window[k]) return;
+  window[k] = true;
+  binder();
+}
+
+/** Logout should always work even if other UI code changes */
+function doLogout() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('roles');
+  localStorage.removeItem('user');
+  location.href = '/';
+}
+
+/**
+ * Ensure modal opens even if the bootstrap instance variable differs.
+ * Uses global `taskModal` if present; else creates a one-off modal instance.
+ */
+function openTaskModal() {
+  const el = document.getElementById('taskModal');
+  if (!el) return;
+
+  const form = el.querySelector('form');
+  if (form) form.reset();
+
+  // Prefer existing instance if your code already created it
+  if (typeof taskModal !== 'undefined' && taskModal) {
+    taskModal.show();
+    return;
+  }
+
+  // Fallback instance (does not change backend)
+  try { new bootstrap.Modal(el).show(); } catch {}
+}
+
+function openCalendarModal() {
+  const el = document.getElementById('calendarModal');
+  if (!el) return;
+
+  if (typeof calendarModal !== 'undefined' && calendarModal) {
+    calendarModal.show();
+    return;
+  }
+  try { new bootstrap.Modal(el).show(); } catch {}
+}
+
 // ===================== BOOTSTRAP MODALS =====================
 const taskModal     = document.getElementById('taskModal')     ? new bootstrap.Modal(document.getElementById('taskModal'))     : null;
 const loginModal    = document.getElementById('loginModal')    ? new bootstrap.Modal(document.getElementById('loginModal'))    : null;
@@ -249,36 +312,79 @@ function openNew() {
 
 // ===================== EVENTS =====================
 function initCoreEvents() {
-  document.getElementById('newBtn')?.addEventListener('click', () =>
-    safeRun('openNew(newBtn)', openNew)
-  );
-
-  document.getElementById('menuCreate')?.addEventListener('click', () =>
-    safeRun('openNew(menuCreate)', openNew)
-  );
-
-  document.getElementById('calendarBtn')?.addEventListener('click', () =>
-    safeRun('calendar', () => calendarModal?.show())
-  );
-
-  document.getElementById('refreshNowBtn')?.addEventListener('click', () =>
-    safeRun('refresh', load)
-  );
-
-  document.getElementById('profileLogoutBtn')?.addEventListener('click', () =>
-    document.getElementById('logoutBtn')?.click()
-  );
-
-  ['q','status','priority'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', () =>
-      safeRun('render(filter)', render)
-    );
+  // ---- New Task (top button + sidebar button) ----
+  document.getElementById('newBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRun('openNew(newBtn)', () => (typeof openNew === 'function' ? openNew() : openTaskModal()));
   });
 
-  document.getElementById('darkToggle')?.addEventListener('change', e =>
-    setTheme(e.target.checked ? 'dark' : 'light')
-  );
+  document.getElementById('menuCreate')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRun('openNew(menuCreate)', () => (typeof openNew === 'function' ? openNew() : openTaskModal()));
+  });
+
+  // ---- Refresh (async safe) ----
+  document.getElementById('refreshNowBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRunAsync('refresh/load', async () => {
+      // load() is async in your file; ensure we await it
+      await load();
+    });
+  });
+
+  // ---- Logout (top + profile button) ----
+  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRun('logout', doLogout);
+  });
+
+  document.getElementById('profileLogoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRun('logout(profile)', doLogout);
+  });
+
+  // ---- Calendar (ensure tasks loaded; then open) ----
+  document.getElementById('calendarBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    safeRunAsync('calendar', async () => {
+      if (!isLogged()) return;
+
+      // Ensure tasks exist (calendar depends on tasks)
+      if (!Array.isArray(tasks) || tasks.length === 0) {
+        if (isAdmin()) await loadAdmin();
+        else await loadEmployee();
+      }
+
+      // Build calendar grid only if function exists in your file
+      if (typeof buildCalendarGrid === 'function') {
+        safeRun('buildCalendarGrid', () => buildCalendarGrid(tasks));
+      }
+
+      openCalendarModal();
+    });
+  });
+
+  // ---- Theme toggle (persist + checkbox sync) ----
+  document.getElementById('darkToggle')?.addEventListener('change', (e) => {
+    const theme = e.target.checked ? 'dark' : 'light';
+    safeRun('setTheme', () => setTheme(theme));
+  });
+
+  // ---- Public panel buttons (if present) ----
+  document.getElementById('publicLogin')?.addEventListener('click', () => (location.href = '/login'));
+  document.getElementById('publicSignup')?.addEventListener('click', () => (location.href = '/signup'));
 }
+
+// Bind events exactly once after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  bindOnce('coreEvents', () => safeRun('initCoreEvents', initCoreEvents));
+
+  // Ensure theme checkbox reflects saved theme
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  safeRun('setTheme(saved)', () => setTheme(savedTheme));
+  const t = document.getElementById('darkToggle');
+  if (t) t.checked = savedTheme === 'dark';
+});
 
 // ===================== INIT =====================
 document.addEventListener('DOMContentLoaded', () => {
