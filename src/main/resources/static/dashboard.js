@@ -8,8 +8,19 @@ let token = localStorage.getItem('token') || '';
 let roles = JSON.parse(localStorage.getItem('roles') || '[]');
 let user  = JSON.parse(localStorage.getItem('user')  || 'null');
 
-const isAdmin  = () => roles.includes('ADMIN');
-const isLogged = () => !!token;
+/**
+ * ✅ IMPORTANT:
+ * Keep in-memory auth in sync with localStorage.
+ * Without this, UI can think you are logged-in while API calls use a stale/empty token → 403.
+ */
+function syncAuthFromStorage() {
+  token = localStorage.getItem('token') || '';
+  roles = JSON.parse(localStorage.getItem('roles') || '[]');
+  user  = JSON.parse(localStorage.getItem('user')  || 'null');
+}
+
+const isAdmin  = () => (syncAuthFromStorage(), roles.includes('ADMIN'));
+const isLogged = () => (syncAuthFromStorage(), !!token);
 
 /**
  * ✅ CRITICAL GLOBAL CACHE
@@ -106,21 +117,35 @@ window.__charts = [];
 
 // ===================== UI BUSY STATE =====================
 let __busy = false;
+let __pendingRequests = 0;
 
+/**
+ * IMPORTANT:
+ * Do NOT disable primary navigation actions globally.
+ * Only disable "refresh" while loading. Otherwise the app feels dead.
+ */
 function setUiBusy(on) {
   __busy = !!on;
   document.documentElement.setAttribute('aria-busy', __busy ? 'true' : 'false');
 
-  ['refreshNowBtn', 'newBtn', 'calendarBtn', 'menuCreate'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.disabled = __busy;
-  });
+  // Only disable refresh (and optionally other "data fetch" triggers)
+  const refresh = document.getElementById('refreshNowBtn');
+  if (refresh) refresh.disabled = __busy;
 }
 
 function showLoader(on = true) {
   const el = document.getElementById('loadingOverlay');
-  if (el) el.style.display = on ? 'grid' : 'none';
-  setUiBusy(on);
+
+  if (on) __pendingRequests++;
+  else __pendingRequests = Math.max(0, __pendingRequests - 1);
+
+  const busy = __pendingRequests > 0;
+
+  if (el) {
+    el.style.display = busy ? 'grid' : 'none';
+    el.style.pointerEvents = busy ? 'auto' : 'none';
+  }
+  setUiBusy(busy);
 }
 
 // ===================== TOAST =====================
@@ -142,17 +167,47 @@ function toast(msg, type = 'error') {
 
 // ===================== API =====================
 async function api(path, opt = {}) {
+  syncAuthFromStorage();
+
   opt.headers = Object.assign({}, opt.headers || {});
   opt.method  = opt.method || 'GET';
+  opt.headers.Accept = 'application/json';
+
   if (token) opt.headers.Authorization = 'Bearer ' + token;
+
+  // ✅ Prevent hung requests from leaving UI "busy"
+  // Does not change backend, only client behavior.
+  const timeoutMs = 15000;
+  let timeoutId = null;
+
+  if (!opt.signal) {
+    const ctrl = new AbortController();
+    opt.signal = ctrl.signal;
+    timeoutId = setTimeout(() => ctrl.abort(), timeoutMs);
+  }
 
   try {
     showLoader(true);
+
     const res = await fetch(path, opt);
     const txt = await res.text();
+
+    // ✅ Auth failures: handle explicitly so the app doesn’t get stuck half-logged-in
+    if (res.status === 401 || res.status === 403) {
+      // Clear bad/stale auth and return to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('roles');
+      localStorage.removeItem('user');
+      syncAuthFromStorage();
+      safeRun('setAuthUI(auth-failed)', setAuthUI);
+
+      throw new Error('Session expired or unauthorized. Please login again.');
+    }
+
     if (!res.ok) throw new Error(txt || 'Request failed');
     return txt ? JSON.parse(txt) : null;
   } finally {
+    if (timeoutId) clearTimeout(timeoutId);
     showLoader(false);
   }
 }
@@ -240,20 +295,32 @@ function render() {
 
 // ===================== LOADERS =====================
 async function loadEmployee() {
-  tasks = await api('/api/tasks') || [];
-  derivedTasksCache = safeRun('deriveTasks(employee)', () => deriveTasks(tasks)) || [];
-  safeRun('render', render);
+  // ✅ Catch here so load() can finish gracefully and UI can re-enable
+  try {
+    tasks = await api('/api/tasks') || [];
+    derivedTasksCache = safeRun('deriveTasks(employee)', () => deriveTasks(tasks)) || [];
+    safeRun('render', render);
+  } catch (e) {
+    toast(e.message || 'Failed to load tasks', 'error');
+  }
 }
 
 async function loadAdmin() {
-  tasks = await api('/api/tasks') || [];
-  derivedTasksCache = safeRun('deriveTasks(admin)', () => deriveTasks(tasks)) || [];
-  safeRun('render', render);
+  try {
+    tasks = await api('/api/tasks') || [];
+    derivedTasksCache = safeRun('deriveTasks(admin)', () => deriveTasks(tasks)) || [];
+    safeRun('render', render);
+  } catch (e) {
+    toast(e.message || 'Failed to load tasks', 'error');
+  }
 }
 
 async function load() {
+  syncAuthFromStorage();
   setAuthUI();
+
   if (!isLogged()) return;
+
   if (isAdmin()) await loadAdmin();
   else await loadEmployee();
 }
@@ -312,85 +379,130 @@ function openNew() {
 
 // ===================== EVENTS =====================
 function initCoreEvents() {
-  // ---- New Task (top button + sidebar button) ----
-  document.getElementById('newBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRun('openNew(newBtn)', () => (typeof openNew === 'function' ? openNew() : openTaskModal()));
-  });
+  bindOnce('coreEvents_internal', () => {
+    // Navbar auth buttons are <button> (not <a>) => must have JS handlers
+    document.getElementById('loginBtn')?.addEventListener('click', () => (location.href = '/login'));
+    document.getElementById('signupBtn')?.addEventListener('click', () => (location.href = '/signup'));
 
-  document.getElementById('menuCreate')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRun('openNew(menuCreate)', () => (typeof openNew === 'function' ? openNew() : openTaskModal()));
-  });
-
-  // ---- Refresh (async safe) ----
-  document.getElementById('refreshNowBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRunAsync('refresh/load', async () => {
-      // load() is async in your file; ensure we await it
-      await load();
+    // Sidebar toggle (mobile)
+    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+      document.getElementById('appSidebar')?.classList.toggle('is-open');
     });
-  });
 
-  // ---- Logout (top + profile button) ----
-  document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRun('logout', doLogout);
-  });
+    // Sidebar: Dashboard
+    document.getElementById('navHome')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      // visual feedback
+      document.querySelectorAll('.app-navitem').forEach(x => x.classList.remove('active'));
+      document.getElementById('navHome')?.classList.add('active');
 
-  document.getElementById('profileLogoutBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRun('logout(profile)', doLogout);
-  });
-
-  // ---- Calendar (ensure tasks loaded; then open) ----
-  document.getElementById('calendarBtn')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    safeRunAsync('calendar', async () => {
-      if (!isLogged()) return;
-
-      // Ensure tasks exist (calendar depends on tasks)
-      if (!Array.isArray(tasks) || tasks.length === 0) {
-        if (isAdmin()) await loadAdmin();
-        else await loadEmployee();
+      // show the right panel
+      if (!isLogged()) {
+        document.getElementById('publicPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
       }
-
-      // Build calendar grid only if function exists in your file
-      if (typeof buildCalendarGrid === 'function') {
-        safeRun('buildCalendarGrid', () => buildCalendarGrid(tasks));
-      }
-
-      openCalendarModal();
+      (isAdmin() ? document.getElementById('adminPanel') : document.getElementById('employeePanel'))
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
-  });
 
-  // ---- Theme toggle (persist + checkbox sync) ----
-  document.getElementById('darkToggle')?.addEventListener('change', (e) => {
-    const theme = e.target.checked ? 'dark' : 'light';
-    safeRun('setTheme', () => setTheme(theme));
-  });
+    // Sidebar: Admin Analytics
+    document.getElementById('navAdminAnalytics')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!isAdmin()) return;
+      document.querySelectorAll('.app-navitem').forEach(x => x.classList.remove('active'));
+      document.getElementById('navAdminAnalytics')?.classList.add('active');
+      document.getElementById('adminPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
 
-  // ---- Public panel buttons (if present) ----
-  document.getElementById('publicLogin')?.addEventListener('click', () => (location.href = '/login'));
-  document.getElementById('publicSignup')?.addEventListener('click', () => (location.href = '/signup'));
+    // New Task (navbar + sidebar)
+    const openNewHandler = (e) => {
+      e?.preventDefault?.();
+      if (!isLogged()) { location.href = '/login'; return; }
+      safeRun('openNew', () => openNew());
+    };
+    document.getElementById('newBtn')?.addEventListener('click', openNewHandler);
+    document.getElementById('menuCreate')?.addEventListener('click', openNewHandler);
+
+    // Refresh
+    document.getElementById('refreshNowBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      safeRunAsync('refresh/load', async () => { await load(); });
+    });
+
+    // Logout (navbar + profile card)
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      safeRun('logout', doLogout);
+    });
+    document.getElementById('profileLogoutBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      safeRun('logout(profile)', doLogout);
+    });
+
+    // Search: navbar search should drive table search input (#q) then render
+    document.getElementById('globalSearch')?.addEventListener('input', (e) => {
+      const q = document.getElementById('q');
+      if (q) q.value = e.target.value || '';
+      safeRun('render(globalSearch)', render);
+    });
+
+    // Calendar
+    document.getElementById('calendarBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      safeRunAsync('calendar', async () => {
+        if (!isLogged()) { location.href = '/login'; return; }
+
+        if (!Array.isArray(tasks) || tasks.length === 0) {
+          if (isAdmin()) await loadAdmin();
+          else await loadEmployee();
+        }
+
+        if (typeof buildCalendarGrid === 'function') {
+          safeRun('buildCalendarGrid', () => buildCalendarGrid(tasks));
+        }
+        openCalendarModal();
+      });
+    });
+
+    // Auto refresh (only if you have setAutoRefresh elsewhere; keep safe)
+    document.getElementById('autoRefreshToggle')?.addEventListener('change', (e) => {
+      if (typeof window.setAutoRefresh === 'function') window.setAutoRefresh(!!e.target.checked);
+    });
+
+    // Theme
+    document.getElementById('darkToggle')?.addEventListener('change', (e) => {
+      const theme = e.target.checked ? 'dark' : 'light';
+      safeRun('setTheme', () => setTheme(theme));
+    });
+
+    // Public panel buttons
+    document.getElementById('publicLogin')?.addEventListener('click', () => (location.href = '/login'));
+    document.getElementById('publicSignup')?.addEventListener('click', () => (location.href = '/signup'));
+  });
 }
 
-// Bind events exactly once after DOM is ready
+// Init (keep single)
 document.addEventListener('DOMContentLoaded', () => {
   bindOnce('coreEvents', () => safeRun('initCoreEvents', initCoreEvents));
 
-  // Ensure theme checkbox reflects saved theme
   const savedTheme = localStorage.getItem('theme') || 'light';
   safeRun('setTheme(saved)', () => setTheme(savedTheme));
   const t = document.getElementById('darkToggle');
   if (t) t.checked = savedTheme === 'dark';
+
+  safeRunAsync('load(initial)', async () => { await load(); });
 });
 
-// ===================== INIT =====================
-document.addEventListener('DOMContentLoaded', () => {
-  const savedTheme = localStorage.getItem('theme') || 'light';
-  setTheme(savedTheme);
+/*
+  ✅ DELETE/REMOVE the SECOND duplicated DOMContentLoaded block below in your file:
 
-  safeRun('initCoreEvents', initCoreEvents);
-  safeRun('load', load);
-});
+  // ===================== INIT =====================
+  document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+
+    safeRun('initCoreEvents', initCoreEvents);
+    safeRun('load', load);
+  });
+
+*/
