@@ -11,16 +11,16 @@
 </head>
 
 <body class="bg-body">
-  <!-- Loading overlay (existing) -->
+  <!-- Loading overlay -->
   <div id="loadingOverlay" class="loading-overlay" style="display:none">
     <div class="spinner-border text-primary" role="status"></div>
     <div class="mt-2 small text-muted">Loading...</div>
   </div>
 
-  <!-- Toasts (existing) -->
+  <!-- Toasts -->
   <div class="toast-container position-fixed p-3 top-0 end-0" id="toastContainer"></div>
 
-  <!-- Top navbar (redesigned, still keeps existing IDs) -->
+  <!-- Top navbar -->
   <nav class="navbar app-navbar sticky-top">
     <div class="container-fluid">
       <div class="d-flex align-items-center gap-2">
@@ -28,7 +28,6 @@
           <i class="bi bi-layout-sidebar-inset"></i>
         </button>
         <a class="navbar-brand mb-0 h1" href="/">TaskManager</a>
-
         <span class="badge app-badge ms-2 d-none d-md-inline-flex">
           <i class="bi bi-shield-check me-1"></i> Secure
         </span>
@@ -40,32 +39,25 @@
           <input id="globalSearch" class="form-control" placeholder="Search tasks">
         </div>
 
-        <!-- Last updated + refresh -->
         <div class="d-none d-lg-flex align-items-center gap-2">
           <span class="text-muted small">Updated:</span>
           <span class="small fw-semibold" id="lastUpdated">—</span>
-          <button class="btn btn-sm btn-outline-secondary" id="refreshNowBtn" type="button" data-bs-toggle="tooltip" title="Refresh data">
+          <button class="btn btn-sm btn-outline-secondary" id="refreshNowBtn" type="button" title="Refresh data">
             <i class="bi bi-arrow-clockwise"></i>
           </button>
-          <div class="form-check form-switch ms-1">
-            <input class="form-check-input" type="checkbox" id="autoRefreshToggle">
-            <label class="form-check-label small text-muted" for="autoRefreshToggle">Auto</label>
-          </div>
         </div>
 
-        <!-- Dark mode toggle (existing ID) -->
         <div class="form-check form-switch me-1">
           <input class="form-check-input" type="checkbox" id="darkToggle">
-          <label class="form-check-label small text-muted" for="darkToggle">Theme</label>
+          <label class="form-check-label small text-muted" for="darkToggle">Dark</label>
         </div>
 
-        <!-- Existing auth buttons -->
-        <button id="loginBtn" class="btn btn-outline-secondary">Sign in</button>
-        <button id="signupBtn" class="btn btn-primary">Sign up</button>
-        <button id="logoutBtn" class="btn btn-outline-warning" style="display:none">
+        <button id="loginBtn" class="btn btn-outline-secondary btn-sm">Sign in</button>
+        <button id="signupBtn" class="btn btn-primary btn-sm">Sign up</button>
+        <button id="logoutBtn" class="btn btn-outline-warning btn-sm" style="display:none">
           <i class="bi bi-box-arrow-right me-1"></i>Logout
         </button>
-        <button id="newBtn" class="btn btn-success">
+        <button id="newBtn" class="btn btn-success btn-sm">
           <i class="bi bi-plus-lg me-1"></i>New Task
         </button>
       </div>
@@ -91,6 +83,11 @@
           <i class="bi bi-calendar3 me-2"></i> Calendar
         </button>
 
+        <!-- Go to Tasks button -->
+        <button class="app-navitem" type="button" id="goToTasksBtn">
+          <i class="bi bi-list-task me-2"></i> My Tasks
+        </button>
+
         <div id="menuAdmin" style="display:none">
           <div class="app-sidebar__title mt-3">Admin</div>
           <a class="app-navitem" href="#" id="navAdminAnalytics">
@@ -101,12 +98,9 @@
 
       <div class="app-sidebar__section mt-auto">
         <div class="app-sidebar__title">Profile</div>
-
-        <!-- SaaS Profile Card -->
         <div class="profile-card" aria-label="User profile">
           <div class="profile-head">
             <div class="profile-avatar" id="p_avatar" aria-hidden="true">—</div>
-
             <div class="profile-meta">
               <div class="profile-name">
                 <span id="p_name" class="profile-name__text">—</span>
@@ -115,13 +109,11 @@
               <div id="p_email" class="profile-email">—</div>
             </div>
           </div>
-
           <div class="profile-foot">
             <div class="profile-kv">
               <div class="profile-k">Username</div>
               <div id="p_user" class="profile-v">—</div>
             </div>
-
             <button class="btn btn-sm btn-outline-secondary w-100 mt-2" id="profileLogoutBtn" type="button">
               <i class="bi bi-box-arrow-right me-1"></i> Logout
             </button>
@@ -132,21 +124,13 @@
 
     <!-- Main content -->
     <main class="app-main">
-      <!-- Layout decision:
-           1) Analytics first (dense, SaaS-style)
-           2) Tasks table after analytics
-           3) No empty rows / no vh/min-height placeholders
-      -->
-
-      <!-- Employee Analytics (default panel) -->
+      <!-- Employee Analytics -->
       <section id="employeePanel" class="container-fluid dash-block">
         <div class="app-section__head">
           <div>
             <h5 class="app-section__title mb-0">My Dashboard</h5>
             <div class="text-muted small">Workload, completion, and upcoming deadlines</div>
           </div>
-
-          <!-- ONE chart at a time + scroll -->
           <div class="d-flex gap-2 align-items-center">
             <select id="empChartSelect" class="form-select form-select-sm" style="max-width:260px">
               <option value="meStatusChart" selected>Status distribution (Pie)</option>
@@ -154,7 +138,9 @@
               <option value="empCompletionArea">Completion trend (Area)</option>
               <option value="empStatusPriorityStacked">Priority × Status (Bar)</option>
             </select>
-            <a class="btn btn-sm btn-outline-secondary" href="#tasksSection">Go to tasks</a>
+            <button class="btn btn-sm btn-primary" type="button" id="goToTasksBtnHeader">
+              <i class="bi bi-list-task me-1"></i>Go to Tasks
+            </button>
           </div>
         </div>
 
@@ -210,9 +196,9 @@
           </div>
         </div>
 
-        <!-- Charts: only ONE visible at a time -->
+        <!-- Charts -->
         <div class="row g-3 mt-1" id="empChartsWrap">
-          <div class="col-12 chart-pane" data-pane="meStatusChart">
+          <div class="col-12 chart-pane is-active" data-pane="meStatusChart">
             <div class="card chart-card">
               <div class="card-body">
                 <div class="chart-head"><h6 class="card-title mb-0">Status distribution</h6></div>
@@ -220,7 +206,6 @@
               </div>
             </div>
           </div>
-
           <div class="col-12 chart-pane" data-pane="mePriorityChart">
             <div class="card chart-card">
               <div class="card-body">
@@ -229,28 +214,26 @@
               </div>
             </div>
           </div>
-
           <div class="col-12 chart-pane" data-pane="empCompletionArea">
             <div class="card chart-card">
               <div class="card-body">
                 <div class="chart-head"><h6 class="card-title mb-0">Completion trend</h6></div>
-                <canvas id="empCompletionArea" height="150"></canvas>
+                <canvas id="empCompletionArea" height="140"></canvas>
               </div>
             </div>
           </div>
-
           <div class="col-12 chart-pane" data-pane="empStatusPriorityStacked">
             <div class="card chart-card">
               <div class="card-body">
                 <div class="chart-head"><h6 class="card-title mb-0">Priority × Status</h6></div>
-                <canvas id="empStatusPriorityStacked" height="150"></canvas>
+                <canvas id="empStatusPriorityStacked" height="140"></canvas>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Admin Analytics (hidden for non-admin) -->
+      <!-- Admin Analytics -->
       <section id="adminPanel" class="container-fluid dash-block" style="display:none">
         <div class="app-section__head">
           <div>
@@ -258,59 +241,122 @@
             <div class="text-muted small">Org-level workload and performance</div>
           </div>
         </div>
-
         <div class="row g-3">
           <div class="col-xl-6">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Tasks per assignee</h6>
-                </div>
-                <canvas id="adminAssigneeBar" height="150"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Tasks per assignee</h6></div>
+                <canvas id="adminAssigneeBar" height="140"></canvas>
               </div>
             </div>
           </div>
-
           <div class="col-xl-6">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Team performance (radar)</h6>
-                </div>
-                <canvas id="adminRadar" height="150"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Team performance (radar)</h6></div>
+                <canvas id="adminRadar" height="140"></canvas>
               </div>
             </div>
           </div>
-
           <div class="col-12">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Completion over time</h6>
-                </div>
-                <canvas id="adminCompletionLine" height="150"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Completion over time</h6></div>
+                <canvas id="adminCompletionLine" height="140"></canvas>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Tasks section -->
+      <!-- Tasks section with Pagination -->
       <section class="container-fluid dash-block" id="tasksSection">
-        <!-- keep your existing Tasks table + filters here (IDs must remain):
-             #q #status #priority #clearFilters #tasksTable
-        -->
-        <!-- ...existing code... -->
+        <div class="app-section__head">
+          <div>
+            <h5 class="app-section__title mb-0"><i class="bi bi-list-task me-2"></i>My Tasks</h5>
+            <div class="text-muted small">Search, filter, edit and track progress</div>
+          </div>
+          <button class="btn btn-sm btn-outline-secondary" id="clearFilters" type="button">
+            <i class="bi bi-x-circle me-1"></i>Clear filters
+          </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="row g-2 align-items-end mb-3">
+          <div class="col-md-5">
+            <label class="form-label small text-muted mb-1">Search</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input id="q" class="form-control" placeholder="Search by title, description, assignee...">
+            </div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-1">Status</label>
+            <select id="status" class="form-select">
+              <option value="">All Status</option>
+              <option value="OPEN">OPEN</option>
+              <option value="IN_PROGRESS">IN_PROGRESS</option>
+              <option value="DONE">DONE</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Priority</label>
+            <select id="priority" class="form-select">
+              <option value="">All Priority</option>
+              <option value="LOW">LOW</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="HIGH">HIGH</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-1">Per page</label>
+            <select id="pageSize" class="form-select">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tasks Table -->
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-modern mb-0" id="tasksTable">
+                <thead class="small text-muted">
+                  <tr>
+                    <th class="ps-3">Title</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Due Date</th>
+                    <th>Assignee</th>
+                    <th class="text-end pe-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="text-muted small" id="paginationInfo">Showing 0 of 0 tasks</div>
+          <nav aria-label="Task pagination">
+            <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+          </nav>
+        </div>
       </section>
     </main>
   </div>
 
-  <!-- Calendar Modal (required by buildCalendarGrid/openCalendarModal) -->
+  <!-- Calendar Modal -->
   <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h6 class="modal-title">Calendar</h6>
+          <h6 class="modal-title"><i class="bi bi-calendar3 me-2"></i>Calendar</h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
@@ -320,30 +366,26 @@
     </div>
   </div>
 
-  <!-- Task Modal (required by openNew/initTaskCrud) -->
+  <!-- Task Modal -->
   <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
         <form id="taskForm" novalidate>
           <div class="modal-header">
-            <h6 class="modal-title" id="taskModalTitle">New Task</h6>
+            <h6 class="modal-title" id="taskModalTitle"><i class="bi bi-plus-circle me-2"></i>New Task</h6>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-
           <div class="modal-body">
             <input type="hidden" id="tm_id">
-
-            <div class="mb-2">
-              <label class="form-label">Title</label>
-              <input id="tm_title" class="form-control" required>
+            <div class="mb-3">
+              <label class="form-label">Title <span class="text-danger">*</span></label>
+              <input id="tm_title" class="form-control" required placeholder="Enter task title">
             </div>
-
-            <div class="mb-2">
+            <div class="mb-3">
               <label class="form-label">Description</label>
-              <textarea id="tm_desc" class="form-control" rows="3"></textarea>
+              <textarea id="tm_desc" class="form-control" rows="3" placeholder="Optional description"></textarea>
             </div>
-
-            <div class="row g-2">
+            <div class="row g-3">
               <div class="col-md-6">
                 <label class="form-label">Status</label>
                 <select id="tm_status" class="form-select">
@@ -361,8 +403,7 @@
                 </select>
               </div>
             </div>
-
-            <div class="row g-2 mt-1">
+            <div class="row g-3 mt-1">
               <div class="col-md-6">
                 <label class="form-label">Due date</label>
                 <input id="tm_due" type="date" class="form-control">
@@ -372,13 +413,13 @@
                 <input id="tm_assignee" class="form-control" placeholder="Optional">
               </div>
             </div>
-
-            <div id="tm_err" class="small text-danger mt-2" style="display:none"></div>
+            <div id="tm_err" class="alert alert-danger mt-3" style="display:none"></div>
           </div>
-
           <div class="modal-footer">
             <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" id="tm_save" type="submit">Save</button>
+            <button class="btn btn-primary" id="tm_save" type="submit">
+              <i class="bi bi-check-lg me-1"></i>Save Task
+            </button>
           </div>
         </form>
       </div>
