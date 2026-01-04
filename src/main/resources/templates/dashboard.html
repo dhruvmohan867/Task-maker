@@ -527,7 +527,144 @@
           </div>
         </section>
 
-        <!-- Existing task table + filters remain (keep your existing block below) -->
+        <!-- Tasks table + filters (REQUIRED by dashboard.js: #q/#status/#priority/#tasksTable/#clearFilters) -->
+        <section class="app-section">
+          <div class="app-section__head">
+            <div>
+              <h5 class="app-section__title">Tasks</h5>
+              <div class="text-muted small">Search, filter, edit and track progress</div>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" id="clearFilters" type="button">
+              Clear filters
+            </button>
+          </div>
+
+          <div class="row g-2 align-items-end mb-2">
+            <div class="col-md-6">
+              <label class="form-label small text-muted mb-1">Search</label>
+              <input id="q" class="form-control" placeholder="Search by title">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted mb-1">Status</label>
+              <select id="status" class="form-select">
+                <option value="">All</option>
+                <option value="OPEN">OPEN</option>
+                <option value="IN_PROGRESS">IN_PROGRESS</option>
+                <option value="DONE">DONE</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small text-muted mb-1">Priority</label>
+              <select id="priority" class="form-select">
+                <option value="">All</option>
+                <option value="LOW">LOW</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="HIGH">HIGH</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-modern mb-0" id="tasksTable">
+                  <thead class="small text-muted">
+                    <tr>
+                      <th class="ps-3">Title</th>
+                      <th>Status</th>
+                      <th>Priority</th>
+                      <th>Due</th>
+                      <th class="text-end pe-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Calendar Modal (REQUIRED by dashboard.js: #calendarModal) -->
+        <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h6 class="modal-title">Calendar</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div id="calendarGrid" class="calendar-grid"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Task Modal (REQUIRED by dashboard.js: #taskModal) -->
+        <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+              <form id="taskForm" novalidate>
+                <div class="modal-header">
+                  <h6 class="modal-title" id="taskModalTitle">New Task</h6>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                  <input type="hidden" id="tm_id">
+
+                  <div class="mb-2">
+                    <label class="form-label">Title</label>
+                    <input id="tm_title" class="form-control" required>
+                    <div class="invalid-feedback">Title is required</div>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label">Description</label>
+                    <textarea id="tm_desc" class="form-control" rows="3"></textarea>
+                  </div>
+
+                  <div class="row g-2">
+                    <div class="col-md-6">
+                      <label class="form-label">Status</label>
+                      <select id="tm_status" class="form-select">
+                        <option value="OPEN">OPEN</option>
+                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                        <option value="DONE">DONE</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Priority</label>
+                      <select id="tm_priority" class="form-select">
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM" selected>MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mt-1">
+                    <div class="col-md-6">
+                      <label class="form-label">Due date</label>
+                      <input id="tm_due" type="date" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Assignee</label>
+                      <input id="tm_assignee" class="form-control" placeholder="Optional">
+                    </div>
+                  </div>
+
+                  <div id="tm_err" class="small text-danger mt-2" style="display:none"></div>
+                </div>
+
+                <div class="modal-footer">
+                  <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+                  <button class="btn btn-primary" id="tm_save" type="submit">Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
         <!-- ...existing code... -->
       </div>
 

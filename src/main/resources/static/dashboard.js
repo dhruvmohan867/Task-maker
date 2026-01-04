@@ -225,6 +225,24 @@ function getInitials(name = '') {
     : (p[0][0] + p[p.length - 1][0]).toUpperCase();
 }
 
+function isoToDateInputValue(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  // yyyy-mm-dd in local time
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function dateInputToIso(value) {
+  if (!value) return null;
+  // Interpret as local date at start of day
+  const d = new Date(`${value}T00:00:00`);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 // ===================== AUTH / PROFILE =====================
 function setAuthUI() {
   const showAuth = !isLogged();
@@ -362,20 +380,165 @@ function deriveTasks(items) {
  */
 function openNew() {
   const modalEl = document.getElementById('taskModal');
-  if (!modalEl) return;
+  if (!modalEl) {
+    toast('Task modal (#taskModal) is missing in dashboard.html', 'error');
+    return;
+  }
 
-  // Reset any form inside the task modal (safe even if IDs differ)
-  const form = modalEl.querySelector('form');
-  if (form) form.reset();
+  document.getElementById('taskModalTitle')?.replaceChildren(document.createTextNode('New Task'));
+  document.getElementById('tm_err') && (document.getElementById('tm_err').style.display = 'none');
 
-  // Clear any hidden id fields if they exist (optional)
-  modalEl.querySelectorAll('input[type="hidden"]').forEach(i => {
-    if ((i.name || '').toLowerCase().includes('id')) i.value = '';
+  document.getElementById('tm_id').value = '';
+  document.getElementById('tm_title').value = '';
+  document.getElementById('tm_desc').value = '';
+  document.getElementById('tm_status').value = 'OPEN';
+  document.getElementById('tm_priority').value = 'MEDIUM';
+  document.getElementById('tm_due').value = '';
+  document.getElementById('tm_assignee').value = '';
+
+  if (taskModal) taskModal.show();
+}
+
+function buildCalendarGrid(items) {
+  const grid = document.getElementById('calendarGrid');
+  if (!grid) {
+    toast('Calendar grid (#calendarGrid) is missing in dashboard.html', 'error');
+    return;
+  }
+
+  // Simple month view (current month)
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const first = new Date(year, month, 1);
+  const startDow = (first.getDay() + 6) % 7; // Mon=0
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const byDay = new Map(); // yyyy-mm-dd -> tasks[]
+  (items || []).forEach(t => {
+    if (!t?.dueDate) return;
+    const d = new Date(t.dueDate);
+    if (Number.isNaN(d.getTime())) return;
+    if (d.getFullYear() !== year || d.getMonth() !== month) return;
+    const key = isoToDateInputValue(t.dueDate);
+    if (!byDay.has(key)) byDay.set(key, []);
+    byDay.get(key).push(t);
   });
 
-  // Show modal (your file already creates `taskModal` bootstrap instance)
-  if (typeof taskModal !== 'undefined' && taskModal) taskModal.show();
+  grid.innerHTML = '';
+  // pad before month start
+  for (let i = 0; i < startDow; i++) {
+    const pad = document.createElement('div');
+    pad.className = 'day';
+    pad.style.opacity = '0.35';
+    grid.appendChild(pad);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'day';
+
+    const d = new Date(year, month, day);
+    const key = isoToDateInputValue(d.toISOString());
+
+    const label = document.createElement('div');
+    label.className = 'date';
+    label.textContent = String(day);
+    cell.appendChild(label);
+
+    const list = byDay.get(key) || [];
+    list.slice(0, 4).forEach(t => {
+      const pill = document.createElement('span');
+      const p = (t.priority || 'MEDIUM').toUpperCase();
+      pill.className = `pill ${p === 'HIGH' ? 'pill-high' : p === 'LOW' ? 'pill-low' : 'pill-med'}`;
+      pill.textContent = t.title || '(untitled)';
+      cell.appendChild(pill);
+    });
+
+    grid.appendChild(cell);
+  }
 }
+
+// Hook up Edit + Save (Update/Create) using existing endpoints (NO backend changes)
+function initTaskCrud() {
+  // Table Edit click (event delegation)
+  document.getElementById('tasksTable')?.addEventListener('click', (e) => {
+    const btn = e.target?.closest?.('button[data-id]');
+    if (!btn) return;
+
+    const id = btn.getAttribute('data-id');
+    const t = (tasks || []).find(x => String(x.id) === String(id));
+    if (!t) return;
+
+    const modalEl = document.getElementById('taskModal');
+    if (!modalEl) {
+      toast('Task modal (#taskModal) is missing in dashboard.html', 'error');
+      return;
+    }
+
+    document.getElementById('taskModalTitle')?.replaceChildren(document.createTextNode('Update Task'));
+    document.getElementById('tm_err') && (document.getElementById('tm_err').style.display = 'none');
+
+    document.getElementById('tm_id').value = t.id || '';
+    document.getElementById('tm_title').value = t.title || '';
+    document.getElementById('tm_desc').value = t.description || '';
+    document.getElementById('tm_status').value = t.status || 'OPEN';
+    document.getElementById('tm_priority').value = t.priority || 'MEDIUM';
+    document.getElementById('tm_due').value = isoToDateInputValue(t.dueDate);
+    document.getElementById('tm_assignee').value = t.assignee || '';
+
+    taskModal?.show();
+  });
+
+  // Form submit: create/update
+  document.getElementById('taskForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    safeRunAsync('taskForm.submit', async () => {
+      if (!isLogged()) { location.href = '/login'; return; }
+
+      const err = document.getElementById('tm_err');
+      if (err) { err.style.display = 'none'; err.textContent = ''; }
+
+      const id = document.getElementById('tm_id')?.value?.trim();
+      const title = document.getElementById('tm_title')?.value?.trim();
+      const description = document.getElementById('tm_desc')?.value?.trim() || '';
+      const status = document.getElementById('tm_status')?.value || 'OPEN';
+      const priority = document.getElementById('tm_priority')?.value || 'MEDIUM';
+      const dueDate = dateInputToIso(document.getElementById('tm_due')?.value || '');
+      const assignee = document.getElementById('tm_assignee')?.value?.trim() || '';
+
+      if (!title) {
+        if (err) { err.textContent = 'Title is required'; err.style.display = 'block'; }
+        return;
+      }
+
+      const body = { title, description, status, priority, dueDate, assignee };
+
+      if (id) {
+        await api(`/api/tasks/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      } else {
+        await api('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+      }
+
+      taskModal?.hide();
+      await load();
+    });
+  });
+}
+
+// Ensure these init hooks run once
+document.addEventListener('DOMContentLoaded', () => {
+  bindOnce('taskCrud', () => safeRun('initTaskCrud', initTaskCrud));
+});
 
 // ===================== EVENTS =====================
 function initCoreEvents() {
