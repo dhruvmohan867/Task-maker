@@ -65,7 +65,8 @@ public class WebhookPublisher {
         );
 
         try {
-            http.postForEntity(url, body, Void.class);
+            final String webhookUrl = java.util.Objects.requireNonNull(this.url, "webhook url");
+            http.postForEntity(webhookUrl, body, Void.class);
         } catch (Exception ignored) {
             // integration must never break core flows
         }
