@@ -195,6 +195,58 @@ async function load() {
   else await loadEmployee();
 }
 
+/**
+ * Fix #1: deriveTasks was referenced by loaders but not implemented.
+ * Keep it defensive so analytics never breaks navigation.
+ */
+function createdAtFromObjectId(id) {
+  if (!id || typeof id !== 'string' || id.length < 8) return null;
+  const hex = id.slice(0, 8);
+  if (!/^[0-9a-fA-F]{8}$/.test(hex)) return null;
+  const seconds = parseInt(hex, 16);
+  if (!Number.isFinite(seconds)) return null;
+  return new Date(seconds * 1000);
+}
+
+function deriveTasks(items) {
+  const now = new Date();
+  return (items || []).map(t => {
+    const createdAt = t?.createdAt ? new Date(t.createdAt) : createdAtFromObjectId(t?.id);
+    const due = t?.dueDate ? new Date(t.dueDate) : null;
+    const isDone = t?.status === 'DONE';
+    const overdue = !!due && !isDone && due < now;
+
+    // These are optional “derived” fields used only by charts/analytics
+    const titleLen = (t?.title || '').trim().length;
+    const descLen = (t?.description || '').trim().length;
+    const complexity = Math.min(100, Math.round(titleLen * 0.8 + descLen * 0.25));
+    const effortDays = (createdAt && due) ? Math.max(0, Math.round((due - createdAt) / 86400000)) : 0;
+
+    return { ...t, __createdAt: createdAt, __due: due, __overdue: overdue, __complexity: complexity, __effortDays: effortDays };
+  });
+}
+
+/**
+ * Fix #2: openNew was referenced by buttons but not implemented.
+ * This opens the existing Bootstrap modal if present and resets its form safely.
+ */
+function openNew() {
+  const modalEl = document.getElementById('taskModal');
+  if (!modalEl) return;
+
+  // Reset any form inside the task modal (safe even if IDs differ)
+  const form = modalEl.querySelector('form');
+  if (form) form.reset();
+
+  // Clear any hidden id fields if they exist (optional)
+  modalEl.querySelectorAll('input[type="hidden"]').forEach(i => {
+    if ((i.name || '').toLowerCase().includes('id')) i.value = '';
+  });
+
+  // Show modal (your file already creates `taskModal` bootstrap instance)
+  if (typeof taskModal !== 'undefined' && taskModal) taskModal.show();
+}
+
 // ===================== EVENTS =====================
 function initCoreEvents() {
   document.getElementById('newBtn')?.addEventListener('click', () =>
