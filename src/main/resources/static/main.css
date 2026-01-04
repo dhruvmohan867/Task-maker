@@ -383,3 +383,171 @@ html[data-theme="dark"] .is-loading .skeleton{ background: rgba(255,255,255,.08)
 
 /* Keep your existing dark table hover */
 html[data-theme="dark"] .table-modern tbody tr:hover { background-color: #111111; }
+
+/* =========================================
+   Theme tokens (fix dark mode visibility)
+   ========================================= */
+:root{
+  --input-bg: rgba(255,255,255,.92);
+  --input-border: rgba(15,23,42,.14);
+  --input-text: var(--text);
+  --input-placeholder: rgba(82,96,115,.75);
+
+  --btn-border: rgba(15,23,42,.14);
+  --btn-hover: rgba(37,99,235,.10);
+
+  --sidebar-text: var(--text);
+  --sidebar-muted: var(--muted);
+}
+
+html[data-theme="dark"]{
+  --input-bg: rgba(10,10,10,.92);
+  --input-border: rgba(255,255,255,.16);
+  --input-text: #ffffff;
+  --input-placeholder: rgba(168,179,196,.70);
+
+  --btn-border: rgba(255,255,255,.16);
+  --btn-hover: rgba(96,165,250,.12);
+
+  --sidebar-text: #ffffff;
+  --sidebar-muted: rgba(168,179,196,.85);
+}
+
+/* Make inputs readable in both themes */
+.form-control, .form-select, .input-group-text{
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--input-text) !important;
+}
+.form-control::placeholder{
+  color: var(--input-placeholder) !important;
+}
+.form-control:focus, .form-select:focus{
+  box-shadow: 0 0 0 .25rem rgba(37,99,235,.18) !important;
+  border-color: rgba(37,99,235,.45) !important;
+}
+
+/* Buttons: consistent borders + hover/active feedback */
+.btn{
+  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
+}
+.btn:disabled, .btn.disabled{
+  opacity: .55;
+  cursor: not-allowed;
+}
+.btn-outline-secondary, .btn-outline-warning, .btn-outline-primary, .btn-outline-danger, .btn-outline-success{
+  border-color: var(--btn-border) !important;
+}
+.btn-outline-secondary:hover,
+.btn-outline-primary:hover,
+.btn-outline-success:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover{
+  background-color: var(--btn-hover) !important;
+}
+.btn:active{
+  transform: translateY(1px);
+}
+
+/* Sidebar text contrast */
+.app-sidebar, .app-sidebar a, .app-sidebar button{
+  color: var(--sidebar-text);
+}
+.app-sidebar__title{
+  color: var(--sidebar-muted);
+}
+
+/* =========================================
+   SaaS Profile Card
+   ========================================= */
+.profile-card{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-head{
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-avatar{
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  letter-spacing: .02em;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(96,165,250,.95));
+  border: 1px solid rgba(37,99,235,.25);
+  user-select: none;
+}
+
+.profile-meta{ min-width: 0; flex: 1; }
+
+.profile-name{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.profile-name__text{
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-email{
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-role{
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: rgba(37,99,235,.10);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+html[data-theme="dark"] .profile-role{
+  background: rgba(96,165,250,.14);
+  border-color: rgba(255,255,255,.14);
+  color: #fff;
+}
+
+.profile-foot{
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.profile-kv{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.profile-k{
+  font-size: 12px;
+  color: var(--muted);
+}
+.profile-v{
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

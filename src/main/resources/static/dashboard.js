@@ -24,9 +24,24 @@ const calendarModal = calendarModalEl ? new bootstrap.Modal(calendarModalEl) : n
 let statusChart, priorityChart, weeklyChart, meStatusChart, mePriorityChart;
 
 /* ------------- utilities ------------- */
+let __busy = false; // UI busy state to disable buttons reliably (client-side only)
+
+function setUiBusy(on) {
+  __busy = !!on;
+  document.documentElement.setAttribute('aria-busy', __busy ? 'true' : 'false');
+
+  // Disable/enable high-frequency buttons
+  const ids = ['refreshNowBtn', 'newBtn', 'calendarBtn', 'menuCreate', 'sidebarToggle'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = __busy;
+  });
+}
+
 function showLoader(on = true) {
   const el = document.getElementById('loadingOverlay');
   if (el) el.style.display = on ? 'grid' : 'none';
+  setUiBusy(on);
 }
 function toast(msg, type = 'success') {
   const cont = document.getElementById('toastContainer'); if (!cont) return;
@@ -71,22 +86,44 @@ function toLocalDateString(val) {
 }
 
 /* ------------- auth + theme ------------- */
+function getInitials(nameOrUser) {
+  const s = (nameOrUser || '').trim();
+  if (!s) return '—';
+  const parts = s.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 function setAuthUI() {
   const showAuth = !isLogged();
   const L = id => document.getElementById(id);
+
   if (L('loginBtn')) L('loginBtn').style.display = showAuth ? '' : 'none';
   if (L('signupBtn')) L('signupBtn').style.display = showAuth ? '' : 'none';
   if (L('logoutBtn')) L('logoutBtn').style.display = showAuth ? 'none' : '';
   if (L('newBtn')) L('newBtn').style.display = showAuth ? 'none' : '';
   if (L('menuAdmin')) L('menuAdmin').style.display = isAdmin() ? '' : 'none';
 
-  // Profile fill
-  if (user) {
-    document.getElementById('p_name')?.replaceChildren(document.createTextNode(user.name || '—'));
-    document.getElementById('p_email')?.replaceChildren(document.createTextNode(user.email || '—'));
-    document.getElementById('p_user')?.replaceChildren(document.createTextNode(user.username || '—'));
-  }
+  // Profile fill (SaaS card)
+  const name = user?.name || user?.username || '—';
+  const email = user?.email || '—';
+  const username = user?.username || '—';
+
+  document.getElementById('p_name')?.replaceChildren(document.createTextNode(name));
+  document.getElementById('p_email')?.replaceChildren(document.createTextNode(email));
+  document.getElementById('p_user')?.replaceChildren(document.createTextNode(username));
+
+  const avatar = document.getElementById('p_avatar');
+  if (avatar) avatar.textContent = getInitials(user?.name || user?.username);
+
+  const roleEl = document.getElementById('p_role');
+  if (roleEl) roleEl.textContent = isAdmin() ? 'Admin' : 'User';
+
+  // Sidebar profile logout button mirrors top logout
+  const pLogout = document.getElementById('profileLogoutBtn');
+  if (pLogout) pLogout.style.display = isLogged() ? '' : 'none';
 }
+
 function applyRoleUI() {
   setAuthUI();
   const pub = document.getElementById('publicPanel');
@@ -108,11 +145,24 @@ function applyRoleUI() {
 // Theme helpers
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  // Hint native controls
+  document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+
   // Sync Bootstrap navbar classes (dark ↔ light)
   document.querySelectorAll('.navbar').forEach(n => {
-    n.classList.remove('navbar-dark','bg-dark','navbar-light','bg-light');
-    if (theme === 'dark') n.classList.add('navbar-dark','bg-dark');
-    else n.classList.add('navbar-light','bg-light');
+    n.classList.remove('navbar-dark', 'bg-dark', 'navbar-light', 'bg-light');
+    if (theme === 'dark') n.classList.add('navbar-dark', 'bg-dark');
+    else n.classList.add('navbar-light', 'bg-light');
+  });
+
+  // Repaint charts with updated CSS variables (safe: window.__charts exists after chart registry init)
+  requestAnimationFrame(() => {
+    try {
+      if (window.__charts) {
+        Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#64748b';
+        window.__charts.forEach(ch => { try { ch.update(); } catch {} });
+      }
+    } catch {}
   });
 }
 
@@ -653,6 +703,7 @@ function setLastUpdated() {
    Chart registry (reuse canvases)
    ------------------------------- */
 const charts = new Map(); // canvasId -> Chart
+window.__charts = charts; // allow theme to trigger chart update safely
 
 function getCanvas(id) {
   const c = document.getElementById(id);
@@ -1380,8 +1431,20 @@ function exportChartPng(canvasId) {
 }
 
 /* -------------------------------
-   Sidebar toggle + tooltips
+   Sidebar toggle + tooltips + buttons
    ------------------------------- */
+function setActiveRangeButton(btn) {
+  // Active state only within the same btn-group (prevents conflicts between admin & employee groups)
+  const group = btn.closest('.btn-group');
+  if (!group) return;
+  group.querySelectorAll('button[data-range]').forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-pressed', 'false');
+  });
+  btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
+}
+
 function initUiEnterprise() {
   // Sidebar (mobile)
   const toggle = document.getElementById('sidebarToggle');
@@ -1390,35 +1453,34 @@ function initUiEnterprise() {
     toggle.addEventListener('click', () => sidebar.classList.toggle('is-open'));
   }
 
+  // Sidebar navigation buttons (work in both roles)
+  document.getElementById('navHome')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    applyRoleUI();
+    // scroll to visible panel top for feedback
+    (isAdmin() ? document.getElementById('adminPanel') : document.getElementById('employeePanel'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('navAdminAnalytics')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!isAdmin()) return;
+    document.getElementById('adminPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Logout from profile card delegates to existing top logout handler
+  document.getElementById('profileLogoutBtn')?.addEventListener('click', () => {
+    document.getElementById('logoutBtn')?.click();
+  });
+
   // Bootstrap tooltips
   document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
     try { new bootstrap.Tooltip(el); } catch {}
   });
 
-  // Status chart type toggle
-  document.getElementById('empStatusPieBtn')?.addEventListener('click', () => {
-    employeeStatusType = 'pie';
-    document.getElementById('empStatusPieBtn')?.classList.add('active');
-    document.getElementById('empStatusDoughnutBtn')?.classList.remove('active');
-    updateEnterpriseDash();
-  });
-  document.getElementById('empStatusDoughnutBtn')?.addEventListener('click', () => {
-    employeeStatusType = 'doughnut';
-    document.getElementById('empStatusDoughnutBtn')?.classList.add('active');
-    document.getElementById('empStatusPieBtn')?.classList.remove('active');
-    updateEnterpriseDash();
-  });
-
-  // Export buttons
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-export]');
-    if (!btn) return;
-    exportChartPng(btn.getAttribute('data-export'));
-  });
-
   // Range buttons (apply to analytics only; safe)
-  document.querySelectorAll('[data-range]').forEach(b => {
+  document.querySelectorAll('button[data-range]').forEach(b => {
     b.addEventListener('click', () => {
+      setActiveRangeButton(b);
       analyticsFilters.rangeDays = Number(b.getAttribute('data-range') || '30') || 30;
       updateEnterpriseDash();
     });
@@ -1434,116 +1496,13 @@ function initUiEnterprise() {
   document.getElementById('adminRadarAssignee')?.addEventListener('change', () => updateEnterpriseDash());
 
   // Refresh now / auto refresh
-  document.getElementById('refreshNowBtn')?.addEventListener('click', () => load());
+  document.getElementById('refreshNowBtn')?.addEventListener('click', () => {
+    if (__busy) return;
+    load();
+  });
   document.getElementById('autoRefreshToggle')?.addEventListener('change', (e) => {
-    const on = !!e.target.checked;
-    setAutoRefresh(on);
+    setAutoRefresh(!!e.target.checked);
   });
 }
 
-let autoRefreshTimer = null;
-function setAutoRefresh(on) {
-  clearInterval(autoRefreshTimer);
-  autoRefreshTimer = null;
-  if (!on) return;
-  autoRefreshTimer = setInterval(() => {
-    if (!isLogged()) return;
-    load();
-  }, 30000); // 30s polling (client-side only)
-}
-
-/* -------------------------------
-   Enterprise dashboard update hook
-   - Called after data loads and when filters change
-   ------------------------------- */
-let derivedTasksCache = []; // derived copy of `tasks`
-
-const updateEnterpriseDash = debounce(() => {
-  const derived = derivedTasksCache || [];
-
-  // Keep assignee dropdown populated from current tasks
-  const assSel = document.getElementById('assigneeFilter');
-  if (assSel) {
-    const current = assSel.value || '';
-    const set = new Set(['']);
-    derived.forEach(t => set.add((t.assignee || '').trim()));
-    const vals = [...set].filter(Boolean).sort((a,b) => a.localeCompare(b));
-    assSel.innerHTML = `<option value="">Assignee: All</option>` + vals.map(v => `<option value="${v}">${v}</option>`).join('');
-    assSel.value = vals.includes(current) ? current : '';
-  }
-
-  if (!isLogged()) return;
-  if (isAdmin()) renderAdminEnterprise(derived);
-  else renderEmployeeEnterprise(derived);
-}, 160);
-
-/* ---------------------------------------
-   Patch existing loaders to include tasks
-   --------------------------------------- */
-
-/** Replace ONLY these two functions with task-driven analytics (frontend only). */
-async function loadAdmin() {
-  try {
-    document.body.classList.add('is-loading');
-
-    // Admin: fetch tasks for org-level analytics + keep existing stats endpoint for compatibility.
-    const [allTasks, s] = await Promise.all([
-      api('/api/tasks'),
-      api('/api/stats/admin')
-    ]);
-
-    tasks = allTasks || [];               // keep global tasks list for table (if any admin table exists)
-    derivedTasksCache = deriveTasks(tasks);
-
-    // Keep existing IDs updated (compat)
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    if (s) {
-      set('adminTotal', s.total);
-      set('adminAssigned', s.assigned);
-      set('adminDone', s.done);
-      set('adminRunning', s.total - s.done);
-    }
-
-    // Enterprise charts computed from tasks
-    updateEnterpriseDash();
-  } catch (e) {
-    toast(e.message || 'Failed to load admin data', 'error');
-  } finally {
-    document.body.classList.remove('is-loading');
-  }
-}
-
-async function loadEmployee() {
-  try {
-    document.body.classList.add('is-loading');
-
-    tasks = await api('/api/tasks');
-    derivedTasksCache = deriveTasks(tasks);
-
-    // Existing table render remains intact
-    render();
-
-    // Keep existing stats endpoint (employee)
-    await api('/api/stats/me'); // we keep call to ensure backend contract remains used
-    updateEnterpriseDash();
-  } catch (e) {
-    toast(e.message || 'Failed to load tasks', 'error');
-  } finally {
-    document.body.classList.remove('is-loading');
-  }
-}
-
-/* Keep existing load() but ensure lastUpdated updates */
-async function load() {
-  applyRoleUI();
-  if (!isLogged()) return;
-  if (isAdmin()) await loadAdmin();
-  else await loadEmployee();
-  setLastUpdated();
-}
-
-/* Init UI enhancements once */
-document.addEventListener('DOMContentLoaded', () => {
-  initUiEnterprise();
-  setLastUpdated();
-});
+/* ...existing code... */

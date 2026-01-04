@@ -101,10 +101,31 @@
 
       <div class="app-sidebar__section mt-auto">
         <div class="app-sidebar__title">Profile</div>
-        <div class="app-profile glass-card">
-          <div class="small text-muted">Name</div><div id="p_name" class="fw-semibold">—</div>
-          <div class="small text-muted mt-2">Email</div><div id="p_email">—</div>
-          <div class="small text-muted mt-2">Username</div><div id="p_user">—</div>
+
+        <!-- SaaS Profile Card -->
+        <div class="profile-card" aria-label="User profile">
+          <div class="profile-head">
+            <div class="profile-avatar" id="p_avatar" aria-hidden="true">—</div>
+
+            <div class="profile-meta">
+              <div class="profile-name">
+                <span id="p_name" class="profile-name__text">—</span>
+                <span id="p_role" class="profile-role badge">User</span>
+              </div>
+              <div id="p_email" class="profile-email">—</div>
+            </div>
+          </div>
+
+          <div class="profile-foot">
+            <div class="profile-kv">
+              <div class="profile-k">Username</div>
+              <div id="p_user" class="profile-v">—</div>
+            </div>
+
+            <button class="btn btn-sm btn-outline-secondary w-100 mt-2" id="profileLogoutBtn" type="button">
+              <i class="bi bi-box-arrow-right me-1"></i> Logout
+            </button>
+          </div>
         </div>
       </div>
     </aside>
