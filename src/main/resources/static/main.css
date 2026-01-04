@@ -276,6 +276,17 @@ html[data-theme="dark"] .app-sidebar{
   margin-bottom: 10px;
 }
 
+/* Smaller charts (caps size even on large screens) */
+.chart-card canvas{
+  width: 100% !important;
+  max-height: 180px; /* reduce overall graph height */
+}
+
+/* Slightly tighter chart card padding (optional, helps density) */
+.chart-card .card-body{
+  padding: 12px;
+}
+
 .app-section{ margin-bottom: 28px; }
 .app-section__head{
   display:flex;
@@ -597,3 +608,13 @@ html[data-theme="dark"] .profile-role{
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Smooth scroll for "Go to tasks" / chart selection scroll */
+html { scroll-behavior: smooth; }
+
+/* One-chart-at-a-time panes */
+.chart-pane { display: none; }
+.chart-pane.is-active { display: block; }
+
+/* Ensure anchor scroll doesn't hide under sticky navbar */
+#tasksSection { scroll-margin-top: 88px; }

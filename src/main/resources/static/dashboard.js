@@ -302,6 +302,18 @@ function currentFilters() {
   };
 }
 
+function matchesQuery(t, q) {
+  if (!q) return true;
+  const hay = [
+    t?.title,
+    t?.description,
+    t?.assignee,
+    t?.status,
+    t?.priority
+  ].filter(Boolean).join(' ').toLowerCase();
+  return hay.includes(q);
+}
+
 // ===================== RENDER =====================
 function render() {
   const { q, status, priority } = currentFilters();
@@ -312,19 +324,30 @@ function render() {
 
   tasks
     .filter(t =>
-      (!q || (t.title || '').toLowerCase().includes(q)) &&
-      (!status || t.status === status) &&
-      (!priority || t.priority === priority)
+      matchesQuery(t, q) &&
+      (!status || (t.status === status)) &&
+      (!priority || (t.priority === priority))
     )
     .forEach(t => {
+      const s = (t.status || 'OPEN').toUpperCase();
+      const canAdvance = s === 'OPEN' || s === 'IN_PROGRESS';
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${t.title || ''}</td>
-        <td>${t.status || ''}</td>
-        <td>${t.priority || ''}</td>
+        <td><span class="badge text-bg-secondary">${s}</span></td>
+        <td>${(t.priority || '').toUpperCase()}</td>
         <td>${fmtDate(t.dueDate)}</td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-primary" data-id="${t.id}">Edit</button>
+          <div class="d-inline-flex gap-1">
+            <button class="btn btn-sm btn-outline-primary" data-id="${t.id}">Edit</button>
+            <button class="btn btn-sm btn-outline-success"
+                    data-action="nextStatus"
+                    data-id="${t.id}"
+                    ${canAdvance ? '' : 'disabled'}>
+              ${s === 'OPEN' ? 'Start' : s === 'IN_PROGRESS' ? 'Done' : 'Done'}
+            </button>
+          </div>
         </td>`;
       tbody.appendChild(tr);
     });
@@ -558,11 +581,6 @@ function initTaskCrud() {
   });
 }
 
-// Ensure these init hooks run once
-document.addEventListener('DOMContentLoaded', () => {
-  bindOnce('taskCrud', () => safeRun('initTaskCrud', initTaskCrud));
-});
-
 // ===================== EVENTS =====================
 function initCoreEvents() {
   bindOnce('coreEvents_internal', () => {
@@ -625,11 +643,26 @@ function initCoreEvents() {
       safeRun('logout(profile)', doLogout);
     });
 
-    // Search: navbar search should drive table search input (#q) then render
+    // Navbar search -> mirrors to Tasks search (#q) then renders
     document.getElementById('globalSearch')?.addEventListener('input', (e) => {
+      const val = (e.target.value || '');
       const q = document.getElementById('q');
-      if (q) q.value = e.target.value || '';
+      if (q) q.value = val;
       safeRun('render(globalSearch)', render);
+    });
+
+    // ✅ Tasks section search/filter bindings (this is what was missing)
+    document.getElementById('q')?.addEventListener('input', () => safeRun('render(q)', render));
+    document.getElementById('status')?.addEventListener('change', () => safeRun('render(status)', render));
+    document.getElementById('priority')?.addEventListener('change', () => safeRun('render(priority)', render));
+
+    document.getElementById('clearFilters')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const q = document.getElementById('q'); if (q) q.value = '';
+      const s = document.getElementById('status'); if (s) s.value = '';
+      const p = document.getElementById('priority'); if (p) p.value = '';
+      const gs = document.getElementById('globalSearch'); if (gs) gs.value = '';
+      safeRun('render(clearFilters)', render);
     });
 
     // Calendar
@@ -837,75 +870,66 @@ function renderEmployeeAnalytics(items) {
 
   // Status pie
   const stEl = document.getElementById('meStatusChart');
-  if (stEl) {
+  if (isCanvasVisible(stEl)) {
     meStatusChart = destroyChart(meStatusChart);
     meStatusChart = new Chart(stEl, {
       type: 'pie',
       data: {
         labels: ['OPEN', 'IN_PROGRESS', 'DONE'],
-        datasets: [{
-          data: [basics.status.OPEN, basics.status.IN_PROGRESS, basics.status.DONE],
-          backgroundColor: ['#0d6efd', '#f59e0b', '#198754']
-        }]
+        datasets: [{ data: [basics.status.OPEN, basics.status.IN_PROGRESS, basics.status.DONE],
+          backgroundColor: ['#0d6efd', '#f59e0b', '#198754'] }]
       },
       options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });
     window.__charts.push(meStatusChart);
+  } else {
+    meStatusChart = destroyChart(meStatusChart);
   }
 
   // Priority doughnut
   const prEl = document.getElementById('mePriorityChart');
-  if (prEl) {
+  if (isCanvasVisible(prEl)) {
     mePriorityChart = destroyChart(mePriorityChart);
     mePriorityChart = new Chart(prEl, {
       type: 'doughnut',
       data: {
         labels: ['LOW', 'MEDIUM', 'HIGH'],
-        datasets: [{
-          data: [basics.priority.LOW, basics.priority.MEDIUM, basics.priority.HIGH],
-          backgroundColor: ['#6c757d', '#0ca9c9', '#dc3545']
-        }]
+        datasets: [{ data: [basics.priority.LOW, basics.priority.MEDIUM, basics.priority.HIGH],
+          backgroundColor: ['#6c757d', '#0ca9c9', '#dc3545'] }]
       },
       options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
     });
     window.__charts.push(mePriorityChart);
+  } else {
+    mePriorityChart = destroyChart(mePriorityChart);
   }
 
   // Completion trend (area)
   const labels = lastNWeekLabels(8);
   const doneSeries = computeWeeklyDone(items, labels);
   const areaEl = document.getElementById('empCompletionArea');
-  if (areaEl) {
+  if (isCanvasVisible(areaEl)) {
     empCompletionArea = destroyChart(empCompletionArea);
     empCompletionArea = new Chart(areaEl, {
       type: 'line',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Done',
-          data: doneSeries,
-          borderColor: '#198754',
-          backgroundColor: 'rgba(25,135,84,.18)',
-          fill: true,
-          tension: 0.35,
-          pointRadius: 2
-        }]
-      },
+      data: { labels, datasets: [{
+        label: 'Done', data: doneSeries, borderColor: '#198754',
+        backgroundColor: 'rgba(25,135,84,.18)', fill: true, tension: 0.35, pointRadius: 2
+      }]},
       options: {
         responsive: true,
         plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false } },
-          y: { beginAtZero: true, ticks: { precision: 0 } }
-        }
+        scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } }
       }
     });
     window.__charts.push(empCompletionArea);
+  } else {
+    empCompletionArea = destroyChart(empCompletionArea);
   }
 
   // Priority × Status (stacked bar)
   const psEl = document.getElementById('empStatusPriorityStacked');
-  if (psEl) {
+  if (isCanvasVisible(psEl)) {
     const { pri, grid } = computePriorityByStatus(items);
     empStatusPriorityStacked = destroyChart(empStatusPriorityStacked);
     empStatusPriorityStacked = new Chart(psEl, {
@@ -921,13 +945,12 @@ function renderEmployeeAnalytics(items) {
       options: {
         responsive: true,
         plugins: { legend: { position: 'bottom' } },
-        scales: {
-          x: { stacked: true, grid: { display: false } },
-          y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
-        }
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } }
       }
     });
     window.__charts.push(empStatusPriorityStacked);
+  } else {
+    empStatusPriorityStacked = destroyChart(empStatusPriorityStacked);
   }
 }
 
@@ -1049,3 +1072,91 @@ async function loadAdmin() {
     toast(e.message || 'Failed to load tasks', 'error');
   }
 }
+
+// ===================== CHART SWITCHER =====================
+function setActivePane(wrapId, paneKey) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+
+  wrap.querySelectorAll('.chart-pane').forEach(p => {
+    p.classList.toggle('is-active', p.getAttribute('data-pane') === paneKey);
+  });
+
+  // Scroll chart into view (requested)
+  const active = wrap.querySelector(`.chart-pane[data-pane="${paneKey}"]`);
+  active?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function isCanvasVisible(canvas) {
+  // Chart.js sizes badly if canvas is display:none
+  return !!(canvas && canvas.offsetParent !== null);
+}
+
+function initChartSwitcher() {
+  // Employee chart switcher
+  const sel = document.getElementById('empChartSelect');
+  if (sel) {
+    // initial state
+    setActivePane('empChartsWrap', sel.value);
+
+    sel.addEventListener('change', () => {
+      setActivePane('empChartsWrap', sel.value);
+      // re-render charts so Chart.js measures correct size
+      safeRun('renderEmployeeAnalytics(active)', () => renderEmployeeAnalytics(derivedTasksCache));
+    });
+  }
+}
+
+// --- Inline status change controls in the tasks table ---
+function nextStatus(current) {
+  const s = (current || 'OPEN').toUpperCase();
+  if (s === 'OPEN') return 'IN_PROGRESS';
+  if (s === 'IN_PROGRESS') return 'DONE';
+  return 'DONE';
+}
+
+function initInlineStatusActions() {
+  const table = document.getElementById('tasksTable');
+  if (!table) return;
+
+  table.addEventListener('click', (e) => {
+    const btn = e.target?.closest?.('button[data-action="nextStatus"]');
+    if (!btn) return;
+
+    safeRunAsync('nextStatus', async () => {
+      if (!isLogged()) { location.href = '/login'; return; }
+
+      const id = btn.getAttribute('data-id');
+      const t = (tasks || []).find(x => String(x.id) === String(id));
+      if (!t) return;
+
+      const newStatus = nextStatus(t.status);
+      if (newStatus === (t.status || '').toUpperCase()) return;
+
+      // Keep all existing fields; only change status (backend enforces transition rules)
+      const body = {
+        title: t.title || '',
+        description: t.description || '',
+        status: newStatus,
+        priority: t.priority || 'MEDIUM',
+        dueDate: t.dueDate || null,
+        assignee: t.assignee || ''
+      };
+
+      await api(`/api/tasks/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      await load();
+    });
+  });
+}
+
+// Ensure these init hooks run once
+document.addEventListener('DOMContentLoaded', () => {
+  bindOnce('taskCrud', () => safeRun('initTaskCrud', initTaskCrud));
+  bindOnce('chartSwitcher', () => safeRun('initChartSwitcher', initChartSwitcher));
+  bindOnce('inlineStatus', () => safeRun('initInlineStatusActions', initInlineStatusActions));
+});

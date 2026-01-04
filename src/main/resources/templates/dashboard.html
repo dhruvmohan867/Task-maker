@@ -145,6 +145,17 @@
             <h5 class="app-section__title mb-0">My Dashboard</h5>
             <div class="text-muted small">Workload, completion, and upcoming deadlines</div>
           </div>
+
+          <!-- ONE chart at a time + scroll -->
+          <div class="d-flex gap-2 align-items-center">
+            <select id="empChartSelect" class="form-select form-select-sm" style="max-width:260px">
+              <option value="meStatusChart" selected>Status distribution (Pie)</option>
+              <option value="mePriorityChart">Priority breakdown (Doughnut)</option>
+              <option value="empCompletionArea">Completion trend (Area)</option>
+              <option value="empStatusPriorityStacked">Priority × Status (Bar)</option>
+            </select>
+            <a class="btn btn-sm btn-outline-secondary" href="#tasksSection">Go to tasks</a>
+          </div>
         </div>
 
         <!-- KPI row -->
@@ -199,48 +210,40 @@
           </div>
         </div>
 
-        <!-- Charts row -->
-        <div class="row g-3 mt-1">
-          <div class="col-lg-4">
+        <!-- Charts: only ONE visible at a time -->
+        <div class="row g-3 mt-1" id="empChartsWrap">
+          <div class="col-12 chart-pane" data-pane="meStatusChart">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Status distribution</h6>
-                </div>
-                <canvas id="meStatusChart" height="180"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Status distribution</h6></div>
+                <canvas id="meStatusChart" height="140"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-4">
+          <div class="col-12 chart-pane" data-pane="mePriorityChart">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Priority breakdown</h6>
-                </div>
-                <canvas id="mePriorityChart" height="180"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Priority breakdown</h6></div>
+                <canvas id="mePriorityChart" height="140"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-4">
+          <div class="col-12 chart-pane" data-pane="empCompletionArea">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Completion trend</h6>
-                </div>
-                <canvas id="empCompletionArea" height="180"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Completion trend</h6></div>
+                <canvas id="empCompletionArea" height="150"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="col-12">
+          <div class="col-12 chart-pane" data-pane="empStatusPriorityStacked">
             <div class="card chart-card">
               <div class="card-body">
-                <div class="chart-head">
-                  <h6 class="card-title mb-0">Priority × Status</h6>
-                </div>
-                <canvas id="empStatusPriorityStacked" height="170"></canvas>
+                <div class="chart-head"><h6 class="card-title mb-0">Priority × Status</h6></div>
+                <canvas id="empStatusPriorityStacked" height="150"></canvas>
               </div>
             </div>
           </div>
@@ -263,7 +266,7 @@
                 <div class="chart-head">
                   <h6 class="card-title mb-0">Tasks per assignee</h6>
                 </div>
-                <canvas id="adminAssigneeBar" height="170"></canvas>
+                <canvas id="adminAssigneeBar" height="150"></canvas>
               </div>
             </div>
           </div>
@@ -274,7 +277,7 @@
                 <div class="chart-head">
                   <h6 class="card-title mb-0">Team performance (radar)</h6>
                 </div>
-                <canvas id="adminRadar" height="170"></canvas>
+                <canvas id="adminRadar" height="150"></canvas>
               </div>
             </div>
           </div>
@@ -285,16 +288,16 @@
                 <div class="chart-head">
                   <h6 class="card-title mb-0">Completion over time</h6>
                 </div>
-                <canvas id="adminCompletionLine" height="170"></canvas>
+                <canvas id="adminCompletionLine" height="150"></canvas>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Tasks section (must be AFTER analytics) -->
-      <section class="container-fluid dash-block">
-        <!-- keep your existing Tasks table + filters block here (IDs must remain):
+      <!-- Tasks section -->
+      <section class="container-fluid dash-block" id="tasksSection">
+        <!-- keep your existing Tasks table + filters here (IDs must remain):
              #q #status #priority #clearFilters #tasksTable
         -->
         <!-- ...existing code... -->
