@@ -132,545 +132,254 @@
 
     <!-- Main content -->
     <main class="app-main">
-      <!-- Public (logged-out) panel (existing ID, keep) -->
-      <div id="publicPanel" class="container-fluid">
+      <!-- Layout decision:
+           1) Analytics first (dense, SaaS-style)
+           2) Tasks table after analytics
+           3) No empty rows / no vh/min-height placeholders
+      -->
+
+      <!-- Employee Analytics (default panel) -->
+      <section id="employeePanel" class="container-fluid dash-block">
+        <div class="app-section__head">
+          <div>
+            <h5 class="app-section__title mb-0">My Dashboard</h5>
+            <div class="text-muted small">Workload, completion, and upcoming deadlines</div>
+          </div>
+        </div>
+
+        <!-- KPI row -->
         <div class="row g-3">
-          <div class="col-lg-8">
-            <div class="card glass-card reveal">
+          <div class="col-6 col-xl-3">
+            <div class="card kpi-card">
               <div class="card-body">
-                <h5 class="card-title mb-2">Welcome to TaskManager</h5>
-                <p class="text-muted mb-0">
-                  Sign in to manage tasks and view analytics designed for teams and executives.
-                </p>
+                <div class="kpi-top">
+                  <span class="kpi-label">Total</span>
+                  <span class="kpi-chip"><i class="bi bi-kanban"></i></span>
+                </div>
+                <div class="kpi-value" id="total">0</div>
+                <div class="kpi-sub text-muted small">All tasks</div>
               </div>
             </div>
           </div>
+          <div class="col-6 col-xl-3">
+            <div class="card kpi-card">
+              <div class="card-body">
+                <div class="kpi-top">
+                  <span class="kpi-label">Completed</span>
+                  <span class="kpi-chip"><i class="bi bi-check2-circle"></i></span>
+                </div>
+                <div class="kpi-value" id="done">0</div>
+                <div class="kpi-sub text-muted small">Status = DONE</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="card kpi-card">
+              <div class="card-body">
+                <div class="kpi-top">
+                  <span class="kpi-label">Pending</span>
+                  <span class="kpi-chip"><i class="bi bi-hourglass-split"></i></span>
+                </div>
+                <div class="kpi-value" id="pending">0</div>
+                <div class="kpi-sub text-muted small">OPEN / IN_PROGRESS</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 col-xl-3">
+            <div class="card kpi-card">
+              <div class="card-body">
+                <div class="kpi-top">
+                  <span class="kpi-label">Overdue</span>
+                  <span class="kpi-chip"><i class="bi bi-exclamation-triangle"></i></span>
+                </div>
+                <div class="kpi-value" id="overdue">0</div>
+                <div class="kpi-sub text-muted small">Due date passed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="row g-3 mt-1">
           <div class="col-lg-4">
-            <div class="card glass-card reveal">
+            <div class="card chart-card">
               <div class="card-body">
-                <h6 class="card-title mb-2">Get started</h6>
-                <div class="d-flex gap-2">
-                  <button id="publicLogin" class="btn btn-outline-primary w-50">Login</button>
-                  <button id="publicSignup" class="btn btn-primary w-50">Sign up</button>
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Status distribution</h6>
                 </div>
+                <canvas id="meStatusChart" height="180"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Priority breakdown</h6>
+                </div>
+                <canvas id="mePriorityChart" height="180"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Completion trend</h6>
+                </div>
+                <canvas id="empCompletionArea" height="180"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Priority × Status</h6>
+                </div>
+                <canvas id="empStatusPriorityStacked" height="170"></canvas>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- Admin panel (existing ID) -->
-      <div id="adminPanel" class="container-fluid" style="display:none">
-        <!-- A) Org KPIs -->
-        <section class="app-section">
-          <div class="app-section__head">
-            <div>
-              <h5 class="app-section__title">Admin Analytics</h5>
-              <div class="text-muted small">Org-level KPIs, workload, and health indicators</div>
-            </div>
-            <div class="d-flex gap-2">
-              <div class="btn-group btn-group-sm" role="group" aria-label="Date range">
-                <button class="btn btn-outline-secondary" data-range="7" type="button">7d</button>
-                <button class="btn btn-outline-secondary" data-range="30" type="button">30d</button>
-                <button class="btn btn-outline-secondary" data-range="90" type="button">90d</button>
+      <!-- Admin Analytics (hidden for non-admin) -->
+      <section id="adminPanel" class="container-fluid dash-block" style="display:none">
+        <div class="app-section__head">
+          <div>
+            <h5 class="app-section__title mb-0">Admin Analytics</h5>
+            <div class="text-muted small">Org-level workload and performance</div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-xl-6">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Tasks per assignee</h6>
+                </div>
+                <canvas id="adminAssigneeBar" height="170"></canvas>
               </div>
             </div>
           </div>
 
-          <div class="row g-3">
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top">
-                    <span class="kpi-label">Total Tasks</span>
-                    <span class="kpi-chip"><i class="bi bi-kanban"></i></span>
-                  </div>
-                  <div class="kpi-value" id="adminTotal">0</div>
-                  <div class="kpi-sub text-muted small"><span id="adminTrendTotal">—</span></div>
+          <div class="col-xl-6">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Team performance (radar)</h6>
                 </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top">
-                    <span class="kpi-label">Assigned</span>
-                    <span class="kpi-chip"><i class="bi bi-person-check"></i></span>
-                  </div>
-                  <div class="kpi-value" id="adminAssigned">0</div>
-                  <div class="kpi-sub text-muted small"><span id="adminTrendAssigned">—</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top">
-                    <span class="kpi-label">Completed</span>
-                    <span class="kpi-chip"><i class="bi bi-check2-all"></i></span>
-                  </div>
-                  <div class="kpi-value" id="adminDone">0</div>
-                  <div class="kpi-sub text-muted small"><span id="adminTrendDone">—</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top">
-                    <span class="kpi-label">Running</span>
-                    <span class="kpi-chip"><i class="bi bi-play-circle"></i></span>
-                  </div>
-                  <div class="kpi-value" id="adminRunning">0</div>
-                  <div class="kpi-sub text-muted small"><span id="adminTrendRunning">—</span></div>
-                </div>
+                <canvas id="adminRadar" height="170"></canvas>
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- B) Admin charts grid -->
-        <section class="app-section">
-          <div class="row g-3">
-            <!-- Status distribution (existing canvas id kept) -->
-            <div class="col-lg-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Status distribution</h6>
-                    <div class="d-flex gap-2">
-                      <button class="btn btn-sm btn-outline-secondary" data-export="statusChart" type="button" title="Export PNG">
-                        <i class="bi bi-download"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <canvas id="statusChart" height="180"></canvas>
+          <div class="col-12">
+            <div class="card chart-card">
+              <div class="card-body">
+                <div class="chart-head">
+                  <h6 class="card-title mb-0">Completion over time</h6>
                 </div>
-              </div>
-            </div>
-
-            <!-- Priority comparison (existing canvas id kept) -->
-            <div class="col-lg-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Priority mix</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="priorityChart" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="priorityChart" height="180"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Weekly trend (existing canvas id kept) -->
-            <div class="col-lg-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Weekly trend</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="weeklyChart" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="weeklyChart" height="180"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Status × Priority stacked bar -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Status × Priority</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="adminStatusPriorityStacked" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="adminStatusPriorityStacked" height="160"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Team workload (horizontal bar) -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Tasks per assignee</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="adminAssigneeBar" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="adminAssigneeBar" height="160"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Project health radar -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Project health (radar)</h6>
-                    <div class="d-flex gap-2 align-items-center">
-                      <select id="adminRadarAssignee" class="form-select form-select-sm w-auto">
-                        <option value="__ALL__">All</option>
-                      </select>
-                      <button class="btn btn-sm btn-outline-secondary" data-export="adminRadar" type="button"><i class="bi bi-download"></i></button>
-                    </div>
-                  </div>
-                  <canvas id="adminRadar" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Mixed chart (created vs completed) -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Created vs Completed</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="adminMixed" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="adminMixed" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Bubble (complexity vs effort) -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Complexity vs Effort</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="adminBubble" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="adminBubble" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- New: Priority × Status matrix (custom visual) -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Priority × Status matrix</h6>
-                    <span class="text-muted small">Derived client-side</span>
-                  </div>
-                  <div id="adminMatrix" class="matrix-grid mt-2" aria-label="Priority status matrix"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- Employee panel (existing ID) -->
-      <div id="employeePanel" class="container-fluid">
-        <!-- A) Employee KPIs -->
-        <section class="app-section">
-          <div class="app-section__head">
-            <div>
-              <h5 class="app-section__title">My Dashboard</h5>
-              <div class="text-muted small">Personal workload, completion, and upcoming deadlines</div>
-            </div>
-
-            <!-- Filters (client-side; does not change backend) -->
-            <div class="d-flex flex-wrap gap-2">
-              <div class="btn-group btn-group-sm" role="group" aria-label="Date range">
-                <button class="btn btn-outline-secondary" data-range="7" type="button">7d</button>
-                <button class="btn btn-outline-secondary" data-range="30" type="button">30d</button>
-                <button class="btn btn-outline-secondary" data-range="90" type="button">90d</button>
-              </div>
-
-              <select id="assigneeFilter" class="form-select form-select-sm w-auto" title="Assignee">
-                <option value="">Assignee: All</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row g-3">
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top"><span class="kpi-label">Total</span><span class="kpi-chip"><i class="bi bi-kanban"></i></span></div>
-                  <div class="kpi-value" id="total">0</div>
-                  <div class="kpi-sub text-muted small">All tasks</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top"><span class="kpi-label">Completed</span><span class="kpi-chip"><i class="bi bi-check2-circle"></i></span></div>
-                  <div class="kpi-value" id="done">0</div>
-                  <div class="kpi-sub text-muted small">Status = DONE</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top"><span class="kpi-label">Pending</span><span class="kpi-chip"><i class="bi bi-hourglass-split"></i></span></div>
-                  <div class="kpi-value" id="pending">0</div>
-                  <div class="kpi-sub text-muted small">Not done</div>
-                </div>
-              </div>
-            </div>
-            <div class="col-sm-6 col-xl-3">
-              <div class="card kpi-card reveal">
-                <div class="card-body">
-                  <div class="kpi-top"><span class="kpi-label">Overdue</span><span class="kpi-chip"><i class="bi bi-exclamation-triangle"></i></span></div>
-                  <div class="kpi-value" id="overdue">0</div>
-                  <div class="kpi-sub text-muted small">Due date passed</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- B) Employee charts -->
-        <section class="app-section">
-          <div class="row g-3">
-            <div class="col-xl-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Status distribution</h6>
-                    <div class="d-flex gap-2">
-                      <div class="btn-group btn-group-sm" role="group" aria-label="Chart type">
-                        <button class="btn btn-outline-secondary active" id="empStatusPieBtn" type="button">Pie</button>
-                        <button class="btn btn-outline-secondary" id="empStatusDoughnutBtn" type="button">Doughnut</button>
-                      </div>
-                      <button class="btn btn-sm btn-outline-secondary" data-export="meStatusChart" type="button"><i class="bi bi-download"></i></button>
-                    </div>
-                  </div>
-                  <!-- existing ID kept -->
-                  <canvas id="meStatusChart" height="180"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <div class="col-xl-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Priority breakdown</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="mePriorityChart" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <!-- existing ID kept -->
-                  <canvas id="mePriorityChart" height="180"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Gauge-style productivity -->
-            <div class="col-xl-4">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Productivity score</h6>
-                    <span class="text-muted small" id="productivityLabel">—</span>
-                  </div>
-                  <canvas id="empGaugeChart" height="180"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Area completion trend -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Completion over time (area)</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="empCompletionArea" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="empCompletionArea" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Stacked bar status × priority -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Status × Priority (stacked)</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="empStatusPriorityStacked" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="empStatusPriorityStacked" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Scatter due date vs priority -->
-            <div class="col-xl-6">
-              <div class="card chart-card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Due date vs priority (scatter)</h6>
-                    <button class="btn btn-sm btn-outline-secondary" data-export="empScatterDuePriority" type="button"><i class="bi bi-download"></i></button>
-                  </div>
-                  <canvas id="empScatterDuePriority" height="170"></canvas>
-                </div>
-              </div>
-            </div>
-
-            <!-- Upcoming deadlines timeline -->
-            <div class="col-xl-6">
-              <div class="card reveal">
-                <div class="card-body">
-                  <div class="chart-head">
-                    <h6 class="card-title mb-0">Upcoming deadlines</h6>
-                    <span class="text-muted small">Next 14 days</span>
-                  </div>
-                  <div id="deadlinesTimeline" class="timeline mt-3" aria-live="polite"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Tasks table + filters (REQUIRED by dashboard.js: #q/#status/#priority/#tasksTable/#clearFilters) -->
-        <section class="app-section">
-          <div class="app-section__head">
-            <div>
-              <h5 class="app-section__title">Tasks</h5>
-              <div class="text-muted small">Search, filter, edit and track progress</div>
-            </div>
-            <button class="btn btn-sm btn-outline-secondary" id="clearFilters" type="button">
-              Clear filters
-            </button>
-          </div>
-
-          <div class="row g-2 align-items-end mb-2">
-            <div class="col-md-6">
-              <label class="form-label small text-muted mb-1">Search</label>
-              <input id="q" class="form-control" placeholder="Search by title">
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small text-muted mb-1">Status</label>
-              <select id="status" class="form-select">
-                <option value="">All</option>
-                <option value="OPEN">OPEN</option>
-                <option value="IN_PROGRESS">IN_PROGRESS</option>
-                <option value="DONE">DONE</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label small text-muted mb-1">Priority</label>
-              <select id="priority" class="form-select">
-                <option value="">All</option>
-                <option value="LOW">LOW</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="HIGH">HIGH</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-modern mb-0" id="tasksTable">
-                  <thead class="small text-muted">
-                    <tr>
-                      <th class="ps-3">Title</th>
-                      <th>Status</th>
-                      <th>Priority</th>
-                      <th>Due</th>
-                      <th class="text-end pe-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Calendar Modal (REQUIRED by dashboard.js: #calendarModal) -->
-        <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h6 class="modal-title">Calendar</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <div id="calendarGrid" class="calendar-grid"></div>
+                <canvas id="adminCompletionLine" height="170"></canvas>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Task Modal (REQUIRED by dashboard.js: #taskModal) -->
-        <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-              <form id="taskForm" novalidate>
-                <div class="modal-header">
-                  <h6 class="modal-title" id="taskModalTitle">New Task</h6>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-
-                <div class="modal-body">
-                  <input type="hidden" id="tm_id">
-
-                  <div class="mb-2">
-                    <label class="form-label">Title</label>
-                    <input id="tm_title" class="form-control" required>
-                    <div class="invalid-feedback">Title is required</div>
-                  </div>
-
-                  <div class="mb-2">
-                    <label class="form-label">Description</label>
-                    <textarea id="tm_desc" class="form-control" rows="3"></textarea>
-                  </div>
-
-                  <div class="row g-2">
-                    <div class="col-md-6">
-                      <label class="form-label">Status</label>
-                      <select id="tm_status" class="form-select">
-                        <option value="OPEN">OPEN</option>
-                        <option value="IN_PROGRESS">IN_PROGRESS</option>
-                        <option value="DONE">DONE</option>
-                      </select>
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Priority</label>
-                      <select id="tm_priority" class="form-select">
-                        <option value="LOW">LOW</option>
-                        <option value="MEDIUM" selected>MEDIUM</option>
-                        <option value="HIGH">HIGH</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div class="row g-2 mt-1">
-                    <div class="col-md-6">
-                      <label class="form-label">Due date</label>
-                      <input id="tm_due" type="date" class="form-control">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Assignee</label>
-                      <input id="tm_assignee" class="form-control" placeholder="Optional">
-                    </div>
-                  </div>
-
-                  <div id="tm_err" class="small text-danger mt-2" style="display:none"></div>
-                </div>
-
-                <div class="modal-footer">
-                  <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
-                  <button class="btn btn-primary" id="tm_save" type="submit">Save</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-
+      <!-- Tasks section (must be AFTER analytics) -->
+      <section class="container-fluid dash-block">
+        <!-- keep your existing Tasks table + filters block here (IDs must remain):
+             #q #status #priority #clearFilters #tasksTable
+        -->
         <!-- ...existing code... -->
-      </div>
-
-      <!-- Calendar modal + Task modal + Login/Signup modals (keep existing) -->
-      <!-- ...existing code... -->
+      </section>
     </main>
+  </div>
+
+  <!-- Calendar Modal (required by buildCalendarGrid/openCalendarModal) -->
+  <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h6 class="modal-title">Calendar</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Modal (required by openNew/initTaskCrud) -->
+  <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <form id="taskForm" novalidate>
+          <div class="modal-header">
+            <h6 class="modal-title" id="taskModalTitle">New Task</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <div class="modal-body">
+            <input type="hidden" id="tm_id">
+
+            <div class="mb-2">
+              <label class="form-label">Title</label>
+              <input id="tm_title" class="form-control" required>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Description</label>
+              <textarea id="tm_desc" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label class="form-label">Status</label>
+                <select id="tm_status" class="form-select">
+                  <option value="OPEN">OPEN</option>
+                  <option value="IN_PROGRESS">IN_PROGRESS</option>
+                  <option value="DONE">DONE</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Priority</label>
+                <select id="tm_priority" class="form-select">
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM" selected>MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row g-2 mt-1">
+              <div class="col-md-6">
+                <label class="form-label">Due date</label>
+                <input id="tm_due" type="date" class="form-control">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Assignee</label>
+                <input id="tm_assignee" class="form-control" placeholder="Optional">
+              </div>
+            </div>
+
+            <div id="tm_err" class="small text-danger mt-2" style="display:none"></div>
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button>
+            <button class="btn btn-primary" id="tm_save" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

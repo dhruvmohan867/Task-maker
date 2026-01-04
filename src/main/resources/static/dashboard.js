@@ -262,6 +262,19 @@ function setAuthUI() {
 }
 
 // ===================== THEME =====================
+function unregisterChart(ch) {
+  if (!ch || !Array.isArray(window.__charts)) return;
+  window.__charts = window.__charts.filter(x => x && x !== ch);
+}
+
+function destroyChart(ch) {
+  if (!ch) return null;
+  unregisterChart(ch);
+  try { ch.destroy(); } catch {}
+  return null;
+}
+
+// In setTheme(), make update defensive
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
@@ -270,7 +283,13 @@ function setTheme(theme) {
   requestAnimationFrame(() => {
     Chart.defaults.color =
       getComputedStyle(document.documentElement).getPropertyValue('--muted') || '#64748b';
-    window.__charts.forEach(ch => safeRun('chart.update', () => ch.update()));
+
+    if (Array.isArray(window.__charts)) {
+      window.__charts = window.__charts.filter(Boolean);
+      window.__charts.forEach(ch => {
+        try { ch.update(); } catch {}
+      });
+    }
   });
 }
 
@@ -317,6 +336,8 @@ async function loadEmployee() {
   try {
     tasks = await api('/api/tasks') || [];
     derivedTasksCache = safeRun('deriveTasks(employee)', () => deriveTasks(tasks)) || [];
+    applyRolePanels();
+    safeRun('renderEmployeeAnalytics', () => renderEmployeeAnalytics(derivedTasksCache));
     safeRun('render', render);
   } catch (e) {
     toast(e.message || 'Failed to load tasks', 'error');
@@ -327,6 +348,8 @@ async function loadAdmin() {
   try {
     tasks = await api('/api/tasks') || [];
     derivedTasksCache = safeRun('deriveTasks(admin)', () => deriveTasks(tasks)) || [];
+    applyRolePanels();
+    safeRun('renderAdminAnalytics', () => renderAdminAnalytics(derivedTasksCache));
     safeRun('render', render);
   } catch (e) {
     toast(e.message || 'Failed to load tasks', 'error');
@@ -669,3 +692,360 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 */
+
+function destroyChart(ch) {
+  if (!ch) return null;
+  try { ch.destroy(); } catch {}
+  return null;
+}
+
+function chartColors() {
+  const css = getComputedStyle(document.documentElement);
+  const text = (css.getPropertyValue('--text') || '#0b1220').trim();
+  const muted = (css.getPropertyValue('--muted') || '#64748b').trim();
+  return { text, muted };
+}
+
+function weekStartIso(d) {
+  const x = new Date(d);
+  if (Number.isNaN(x.getTime())) return null;
+  const day = (x.getDay() + 6) % 7; // Mon=0
+  x.setDate(x.getDate() - day);
+  x.setHours(0, 0, 0, 0);
+  return x.toISOString().slice(0, 10);
+}
+
+function lastNWeekLabels(n = 8) {
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(start.getDate() - (7 * (n - 1)));
+  const labels = [];
+  let cur = new Date(start);
+  for (let i = 0; i < n; i++) {
+    labels.push(weekStartIso(cur));
+    cur.setDate(cur.getDate() + 7);
+  }
+  return labels;
+}
+
+function computeBasics(items) {
+  const now = new Date();
+  const status = { OPEN: 0, IN_PROGRESS: 0, DONE: 0 };
+  const priority = { LOW: 0, MEDIUM: 0, HIGH: 0 };
+  let overdue = 0;
+
+  (items || []).forEach(t => {
+    const s = (t.status || 'OPEN').toUpperCase();
+    const p = (t.priority || 'MEDIUM').toUpperCase();
+    if (status[s] != null) status[s]++;
+    if (priority[p] != null) priority[p]++;
+
+    const due = t.dueDate ? new Date(t.dueDate) : null;
+    if (due && !Number.isNaN(due.getTime()) && s !== 'DONE' && due < now) overdue++;
+  });
+
+  return { status, priority, overdue };
+}
+
+function computeWeeklyDone(items, labels) {
+  const m = new Map(labels.map(l => [l, 0]));
+  (items || []).forEach(t => {
+    if ((t.status || '').toUpperCase() !== 'DONE') return;
+    const d = t.dueDate ? new Date(t.dueDate) : (t.__createdAt || null);
+    const key = d ? weekStartIso(d) : null;
+    if (!key || !m.has(key)) return;
+    m.set(key, m.get(key) + 1);
+  });
+  return labels.map(l => m.get(l) || 0);
+}
+
+function computePriorityByStatus(items) {
+  const pri = ['LOW', 'MEDIUM', 'HIGH'];
+  const st = ['OPEN', 'IN_PROGRESS', 'DONE'];
+  const grid = {};
+  st.forEach(s => (grid[s] = pri.map(() => 0)));
+
+  (items || []).forEach(t => {
+    const p = (t.priority || 'MEDIUM').toUpperCase();
+    const s = (t.status || 'OPEN').toUpperCase();
+    const pi = pri.indexOf(p);
+    if (pi < 0 || !grid[s]) return;
+    grid[s][pi]++;
+  });
+
+  return { pri, grid };
+}
+
+function computeTasksPerAssignee(items) {
+  const counts = new Map();
+  (items || []).forEach(t => {
+    const a = (t.assignee || '').trim() || 'Unassigned';
+    counts.set(a, (counts.get(a) || 0) + 1);
+  });
+  const entries = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+  return { labels: entries.map(x => x[0]), data: entries.map(x => x[1]) };
+}
+
+function computeTeamRadar(items) {
+  // Radar uses rates (0..100) so axes are comparable
+  const total = (items || []).length || 1;
+  const now = new Date();
+
+  let done = 0, inProg = 0, open = 0, assigned = 0, overdue = 0;
+  (items || []).forEach(t => {
+    const s = (t.status || 'OPEN').toUpperCase();
+    if (s === 'DONE') done++;
+    else if (s === 'IN_PROGRESS') inProg++;
+    else open++;
+
+    if ((t.assignee || '').trim()) assigned++;
+
+    const due = t.dueDate ? new Date(t.dueDate) : null;
+    if (due && !Number.isNaN(due.getTime()) && s !== 'DONE' && due < now) overdue++;
+  });
+
+  const pct = (x) => Math.round((x / total) * 100);
+  return {
+    labels: ['Done %', 'Assigned %', 'Overdue %', 'In Progress %', 'Open %'],
+    data: [pct(done), pct(assigned), pct(overdue), pct(inProg), pct(open)]
+  };
+}
+
+// Chart instances (keep stable, destroy/recreate on rerender)
+let meStatusChart = null;
+let mePriorityChart = null;
+let empCompletionArea = null;
+let empStatusPriorityStacked = null;
+
+let adminAssigneeBar = null;
+let adminRadar = null;
+let adminCompletionLine = null;
+
+function renderEmployeeAnalytics(items) {
+  const { muted } = chartColors();
+  Chart.defaults.color = muted;
+
+  const basics = computeBasics(items);
+  const total = (items || []).length;
+  const done = basics.status.DONE;
+  const pending = total - done;
+
+  document.getElementById('total') && (document.getElementById('total').textContent = String(total));
+  document.getElementById('done') && (document.getElementById('done').textContent = String(done));
+  document.getElementById('pending') && (document.getElementById('pending').textContent = String(pending));
+  document.getElementById('overdue') && (document.getElementById('overdue').textContent = String(basics.overdue));
+
+  // Status pie
+  const stEl = document.getElementById('meStatusChart');
+  if (stEl) {
+    meStatusChart = destroyChart(meStatusChart);
+    meStatusChart = new Chart(stEl, {
+      type: 'pie',
+      data: {
+        labels: ['OPEN', 'IN_PROGRESS', 'DONE'],
+        datasets: [{
+          data: [basics.status.OPEN, basics.status.IN_PROGRESS, basics.status.DONE],
+          backgroundColor: ['#0d6efd', '#f59e0b', '#198754']
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+    window.__charts.push(meStatusChart);
+  }
+
+  // Priority doughnut
+  const prEl = document.getElementById('mePriorityChart');
+  if (prEl) {
+    mePriorityChart = destroyChart(mePriorityChart);
+    mePriorityChart = new Chart(prEl, {
+      type: 'doughnut',
+      data: {
+        labels: ['LOW', 'MEDIUM', 'HIGH'],
+        datasets: [{
+          data: [basics.priority.LOW, basics.priority.MEDIUM, basics.priority.HIGH],
+          backgroundColor: ['#6c757d', '#0ca9c9', '#dc3545']
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+    });
+    window.__charts.push(mePriorityChart);
+  }
+
+  // Completion trend (area)
+  const labels = lastNWeekLabels(8);
+  const doneSeries = computeWeeklyDone(items, labels);
+  const areaEl = document.getElementById('empCompletionArea');
+  if (areaEl) {
+    empCompletionArea = destroyChart(empCompletionArea);
+    empCompletionArea = new Chart(areaEl, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Done',
+          data: doneSeries,
+          borderColor: '#198754',
+          backgroundColor: 'rgba(25,135,84,.18)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+    window.__charts.push(empCompletionArea);
+  }
+
+  // Priority × Status (stacked bar)
+  const psEl = document.getElementById('empStatusPriorityStacked');
+  if (psEl) {
+    const { pri, grid } = computePriorityByStatus(items);
+    empStatusPriorityStacked = destroyChart(empStatusPriorityStacked);
+    empStatusPriorityStacked = new Chart(psEl, {
+      type: 'bar',
+      data: {
+        labels: pri,
+        datasets: [
+          { label: 'OPEN', data: grid.OPEN, backgroundColor: 'rgba(13,110,253,.65)' },
+          { label: 'IN_PROGRESS', data: grid.IN_PROGRESS, backgroundColor: 'rgba(245,158,11,.65)' },
+          { label: 'DONE', data: grid.DONE, backgroundColor: 'rgba(25,135,84,.65)' }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { stacked: true, grid: { display: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+    window.__charts.push(empStatusPriorityStacked);
+  }
+}
+
+function renderAdminAnalytics(items) {
+  const { muted } = chartColors();
+  Chart.defaults.color = muted;
+
+  // Tasks per assignee (horizontal bar)
+  const barEl = document.getElementById('adminAssigneeBar');
+  if (barEl) {
+    const tp = computeTasksPerAssignee(items);
+    adminAssigneeBar = destroyChart(adminAssigneeBar);
+    adminAssigneeBar = new Chart(barEl, {
+      type: 'bar',
+      data: { labels: tp.labels, datasets: [{ label: 'Tasks', data: tp.data, backgroundColor: 'rgba(37,99,235,.65)' }] },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { beginAtZero: true, ticks: { precision: 0 } },
+          y: { grid: { display: false } }
+        }
+      }
+    });
+    window.__charts.push(adminAssigneeBar);
+  }
+
+  // Team performance radar
+  const radEl = document.getElementById('adminRadar');
+  if (radEl) {
+    const r = computeTeamRadar(items);
+    adminRadar = destroyChart(adminRadar);
+    adminRadar = new Chart(radEl, {
+      type: 'radar',
+      data: {
+        labels: r.labels,
+        datasets: [{
+          label: 'Team',
+          data: r.data,
+          borderColor: 'rgba(96,165,250,.95)',
+          backgroundColor: 'rgba(96,165,250,.20)',
+          pointBackgroundColor: 'rgba(96,165,250,.95)'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { r: { suggestedMin: 0, suggestedMax: 100 } }
+      }
+    });
+    window.__charts.push(adminRadar);
+  }
+
+  // Completion over time (line)
+  const lineEl = document.getElementById('adminCompletionLine');
+  if (lineEl) {
+    const labels = lastNWeekLabels(8);
+    const doneSeries = computeWeeklyDone(items, labels);
+    adminCompletionLine = destroyChart(adminCompletionLine);
+    adminCompletionLine = new Chart(lineEl, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Done',
+          data: doneSeries,
+          borderColor: '#60a5fa',
+          backgroundColor: 'rgba(96,165,250,.18)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0 } }
+        }
+      }
+    });
+    window.__charts.push(adminCompletionLine);
+  }
+}
+
+function applyRolePanels() {
+  const admin = isAdmin();
+  const adminPanel = document.getElementById('adminPanel');
+  const empPanel = document.getElementById('employeePanel');
+
+  // Hide cleanly to remove spacing gaps
+  if (adminPanel) adminPanel.style.display = admin ? '' : 'none';
+  if (empPanel) empPanel.style.display = admin ? 'none' : '';
+}
+
+// Call after data load
+async function loadEmployee() {
+  try {
+    tasks = await api('/api/tasks') || [];
+    derivedTasksCache = safeRun('deriveTasks(employee)', () => deriveTasks(tasks)) || [];
+    applyRolePanels();
+    safeRun('renderEmployeeAnalytics', () => renderEmployeeAnalytics(derivedTasksCache));
+    safeRun('render', render);
+  } catch (e) {
+    toast(e.message || 'Failed to load tasks', 'error');
+  }
+}
+
+async function loadAdmin() {
+  try {
+    tasks = await api('/api/tasks') || [];
+    derivedTasksCache = safeRun('deriveTasks(admin)', () => deriveTasks(tasks)) || [];
+    applyRolePanels();
+    safeRun('renderAdminAnalytics', () => renderAdminAnalytics(derivedTasksCache));
+    safeRun('render', render);
+  } catch (e) {
+    toast(e.message || 'Failed to load tasks', 'error');
+  }
+}

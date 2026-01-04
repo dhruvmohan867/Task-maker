@@ -230,11 +230,23 @@ html[data-theme="dark"] .app-sidebar{
 
 /* Main */
 .app-main{
-  padding: var(--sp-3);
+  padding: 16px;
 }
 @media (max-width: 576px){
-  .app-main{ padding: var(--sp-2); }
+  .app-main{ padding: 12px; }
 }
+.dash-block{ margin-bottom: 16px; }
+
+/* Your old value was large; keep sections tighter */
+.app-section{ margin-bottom: 16px; }
+
+/* IMPORTANT:
+   Dashboard does not run the IntersectionObserver used on landing page.
+   If cards use .reveal, they stay invisible (opacity:0).
+   Make reveal visible by default inside dashboard shell.
+*/
+.app-shell .reveal{ opacity: 1; transform: none; }
+.app-shell .reveal-in{ opacity: 1; transform: none; }
 
 /* Glass cards */
 .glass-card{
