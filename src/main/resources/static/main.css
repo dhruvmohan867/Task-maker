@@ -457,6 +457,40 @@ html[data-theme="dark"]{
   color: var(--sidebar-muted);
 }
 
+/* -----------------------------
+   Global text contrast fixes
+   ----------------------------- */
+.text-muted{ color: var(--muted) !important; }
+.small.text-muted{ color: var(--muted) !important; }
+
+/* Sidebar + profile card readability */
+.app-sidebar{ color: var(--sidebar-text); }
+.app-sidebar .text-muted{ color: var(--sidebar-muted) !important; }
+
+/* Inputs: always visible borders + readable text */
+.form-control, .form-select, .input-group-text{
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--input-text) !important;
+}
+.form-control::placeholder{ color: var(--input-placeholder) !important; }
+
+/* Outline buttons: keep contrast in dark mode */
+html[data-theme="dark"] .btn-outline-secondary{
+  color: var(--text) !important;
+  border-color: var(--btn-border) !important;
+}
+html[data-theme="dark"] .btn-outline-warning{
+  border-color: rgba(245, 158, 11, .55) !important;
+}
+html[data-theme="dark"] .btn-outline-warning:hover{
+  background-color: rgba(245, 158, 11, .12) !important;
+}
+
+/* Give all clickable buttons proper cursor feedback */
+button, .btn, .app-navitem{ cursor: pointer; }
+button:disabled, .btn:disabled{ cursor: not-allowed; }
+
 /* =========================================
    SaaS Profile Card
    ========================================= */
