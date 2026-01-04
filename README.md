@@ -192,4 +192,4 @@ Analytics DTOs: [`com.dhruv.taskmanager.dto.AnalyticsDtos`](src/main/java/com/dh
 ---
 
 ## License
-MIT — see [LICENSE](LICENSE).
+MIT  [LICENSE](LICENSE).
