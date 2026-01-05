@@ -29,11 +29,11 @@ A modern task manager with a clean web UI (Thymeleaf + Bootstrap), JWT authentic
 ---
 
 ## Live Demo
-- Try it: https://your-render-app-url.example.com
-  - Dashboard: https://your-render-app-url.example.com/dashboard
-  - Health check: https://your-render-app-url.example.com/ping
+- Try it: https://task-maker-fu3y.onrender.com
+  - Dashboard: https://task-maker-fu3y.onrender.com/dashboard
+  - Health check: https://task-maker-fu3y.onrender.com/ping
 
-> Replace the URL with your deployed Render link.
+
 
 ## Key Tech Highlights
 - Stateless auth with JWT (HS256) for easy horizontal scaling via [`com.dhruv.taskmanager.security.JwtSecurity`](src/main/java/com/dhruv/taskmanager/security/JwtSecurity.java) and request parsing in [`com.dhruv.taskmanager.security.JwtAuthFilter`](src/main/java/com/dhruv/taskmanager/security/JwtAuthFilter.java).
