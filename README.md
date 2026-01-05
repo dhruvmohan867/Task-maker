@@ -12,6 +12,9 @@ A modern task manager with a clean web UI (Thymeleaf + Bootstrap), JWT authentic
 
 
 ## Table of Contents
+- [Live Demo](#live-demo)
+- [Key Tech Highlights](#key-tech-highlights)
+- [System Architecture](#system-architecture)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Screenshots (optional)](#screenshots-optional)
@@ -22,6 +25,57 @@ A modern task manager with a clean web UI (Thymeleaf + Bootstrap), JWT authentic
 - [Project Layout](#project-layout)
 - [Build & Test](#build--test)
 - [License](#license)
+
+---
+
+## Live Demo
+- Try it: https://your-render-app-url.example.com
+  - Dashboard: https://your-render-app-url.example.com/dashboard
+  - Health check: https://your-render-app-url.example.com/ping
+
+> Replace the URL with your deployed Render link.
+
+## Key Tech Highlights
+- Stateless auth with JWT (HS256) for easy horizontal scaling via [`com.dhruv.taskmanager.security.JwtSecurity`](src/main/java/com/dhruv/taskmanager/security/JwtSecurity.java) and request parsing in [`com.dhruv.taskmanager.security.JwtAuthFilter`](src/main/java/com/dhruv/taskmanager/security/JwtAuthFilter.java).
+- Flexible, cloud-ready persistence on MongoDB via [`com.dhruv.taskmanager.repository.TaskRepository`](src/main/java/com/dhruv/taskmanager/repository/TaskRepository.java).
+- Clear domain model and enums:
+  - [`com.dhruv.taskmanager.model.Task`](src/main/java/com/dhruv/taskmanager/model/Task.java)
+  - [`com.dhruv.taskmanager.domain.TaskStatus`](src/main/java/com/dhruv/taskmanager/domain/TaskStatus.java)
+  - [`com.dhruv.taskmanager.domain.TaskPriority`](src/main/java/com/dhruv/taskmanager/domain/TaskPriority.java)
+- Business rules and policy-driven updates via services:
+  - Commands and events: [`com.dhruv.taskmanager.service.TaskCommandService`](src/main/java/com/dhruv/taskmanager/service/TaskCommandService.java)
+  - Repository facade: [`com.dhruv.taskmanager.service.TaskService`](src/main/java/com/dhruv/taskmanager/service/TaskService.java)
+  - Analytics: [`com.dhruv.taskmanager.service.AnalyticsService`](src/main/java/com/dhruv/taskmanager/service/AnalyticsService.java)
+- Optional webhooks for integrations, disabled by default, via [`com.dhruv.taskmanager.integration.WebhookPublisher`](src/main/java/com/dhruv/taskmanager/integration/WebhookPublisher.java).
+- Modern UI with Thymeleaf + Bootstrap:
+  - Dashboard HTML: [src/main/resources/templates/dashboard.html](src/main/resources/templates/dashboard.html)
+  - Dashboard JS: [src/main/resources/static/dashboard.js](src/main/resources/static/dashboard.js)
+  - Auth JS: [src/main/resources/static/auth.js](src/main/resources/static/auth.js)
+  - Styles: [src/main/resources/static/main.css](src/main/resources/static/main.css)
+
+## System Architecture
+- Frontend (Thymeleaf views)
+  - Landing: [templates/index.html](src/main/resources/templates/index.html)
+  - Login/Signup: [templates/login.html](src/main/resources/templates/login.html), [templates/signup.html](src/main/resources/templates/signup.html)
+  - Dashboard: [templates/dashboard.html](src/main/resources/templates/dashboard.html)
+  - JS/CSS: [static/dashboard.js](src/main/resources/static/dashboard.js), [static/auth.js](src/main/resources/static/auth.js), [static/main.css](src/main/resources/static/main.css)
+- Security
+  - JWT creation: [`security.JwtSecurity`](src/main/java/com/dhruv/taskmanager/security/JwtSecurity.java)
+  - Request filter: [`security.JwtAuthFilter`](src/main/java/com/dhruv/taskmanager/security/JwtAuthFilter.java)
+- REST layer (not all controllers shown here)
+  - UI routes: [`controller.ViewController`](src/main/java/com/dhruv/taskmanager/controller/ViewController.java)
+  - Ping: [`controller.PingController`](src/main/java/com/dhruv/taskmanager/controller/PingController.java)
+- Service layer
+  - Read/write operations and policies: [`service.TaskService`](src/main/java/com/dhruv/taskmanager/service/TaskService.java), [`service.TaskCommandService`](src/main/java/com/dhruv/taskmanager/service/TaskCommandService.java)
+  - Analytics: [`service.AnalyticsService`](src/main/java/com/dhruv/taskmanager/service/AnalyticsService.java)
+- Persistence
+  - Mongo repository: [`repository.TaskRepository`](src/main/java/com/dhruv/taskmanager/repository/TaskRepository.java)
+- Integrations
+  - Webhook events: [`integration.WebhookPublisher`](src/main/java/com/dhruv/taskmanager/integration/WebhookPublisher.java)
+
+Data flow (high level):
+Frontend → JWT-secured REST → Services/Policies → Repository → MongoDB  
+Events from services → optional Webhook → external system
 
 ---
 
