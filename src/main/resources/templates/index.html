@@ -37,49 +37,44 @@
   </nav>
 
   <!-- Hero Section -->
-  <header class="hero-section">
-    <div class="hero-bg"></div>
+  <header class="hero-section saas-hero">
+    <div class="hero-bg hero-glow"></div>
     <div class="container position-relative">
       <div class="row align-items-center min-vh-100 py-5">
         <div class="col-lg-6 text-center text-lg-start">
-          <div class="hero-badge mb-3">
+          <div class="hero-badge mb-3 glass-badge">
             <i class="bi bi-lightning-charge-fill me-1"></i>
-            <span>New: AI-powered task suggestions</span>
+            <span>Productivity, clarity, and control</span>
           </div>
-          <h1 class="display-4 fw-bold mb-4 hero-title">
-            Organize your work.<br>
-            <span class="text-gradient">Focus on what matters.</span>
+
+          <h1 class="display-4 fw-800 mb-3 hero-title">
+            TaskManager —<br>
+            <span class="text-gradient">Enterprise-ready task management</span>
           </h1>
+
           <p class="lead mb-4 hero-subtitle">
-            A simple, secure task manager to plan, track, and complete your work efficiently. 
-            Built with modern technologies for teams of all sizes.
+            Minimal, fast, and secure. Plan, track, and deliver with precision—across teams and timelines.
           </p>
+
           <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
             <a class="btn btn-primary btn-lg px-4" href="/signup">
-              <i class="bi bi-rocket-takeoff me-2"></i>Start Free Trial
+              <i class="bi bi-rocket-takeoff me-2"></i>Get Started
             </a>
             <a class="btn btn-outline-light btn-lg px-4" href="/login">
-              <i class="bi bi-play-circle me-2"></i>Watch Demo
+              <i class="bi bi-play-circle me-2"></i>View Demo
             </a>
           </div>
+
           <div class="hero-stats mt-4">
-            <div class="stat-item">
-              <div class="stat-number">10K+</div>
-              <div class="stat-label">Active Users</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number">50K+</div>
-              <div class="stat-label">Tasks Completed</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-number">99.9%</div>
-              <div class="stat-label">Uptime</div>
-            </div>
+            
           </div>
         </div>
+
+        <!-- Desktop + Mobile Mockups (glassmorphism, soft blur, depth) -->
         <div class="col-lg-6 mt-5 mt-lg-0">
-          <div class="hero-mockup">
-            <div class="mockup-window">
+          <div class="mockup-stage">
+            <!-- Desktop mockup -->
+            <div class="mockup-window glass-window mockup-desktop">
               <div class="mockup-header">
                 <div class="mockup-dots">
                   <span class="dot red"></span>
@@ -89,17 +84,79 @@
                 <div class="mockup-title">TaskManager Dashboard</div>
               </div>
               <div class="mockup-body">
-                <img src="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=800&auto=format&fit=crop&q=80" 
-                     alt="Dashboard Preview" class="mockup-img">
+                <!-- KPI row -->
+                <div class="mock-row">
+                  <div class="kpi glass-chip">
+                    <div class="kpi-top">
+                      <span class="kpi-label">Total</span>
+                      <span class="kpi-dot"></span>
+                    </div>
+                    <div class="kpi-value">124</div>
+                    <div class="kpi-sub">All tasks</div>
+                  </div>
+                  <div class="kpi glass-chip">
+                    <div class="kpi-top">
+                      <span class="kpi-label">Completed</span>
+                      <span class="kpi-dot"></span>
+                    </div>
+                    <div class="kpi-value">76</div>
+                    <div class="kpi-sub">DONE</div>
+                  </div>
+                  <div class="kpi glass-chip">
+                    <div class="kpi-top">
+                      <span class="kpi-label">Overdue</span>
+                      <span class="kpi-dot warn"></span>
+                    </div>
+                    <div class="kpi-value">8</div>
+                    <div class="kpi-sub">Due passed</div>
+                  </div>
+                </div>
+                <!-- Charts + list -->
+                <div class="mock-grid">
+                  <div class="glass-card chart-card-sim">
+                    <div class="bars">
+                      <span style="height:62%"></span>
+                      <span style="height:78%"></span>
+                      <span style="height:42%"></span>
+                      <span style="height:86%"></span>
+                      <span style="height:55%"></span>
+                      <span style="height:72%"></span>
+                    </div>
+                  </div>
+                  <div class="glass-card list-card-sim">
+                    <div class="list-row">
+                      <span class="pill low">LOW</span>
+                      <div class="line w-70"></div>
+                    </div>
+                    <div class="list-row">
+                      <span class="pill med">MED</span>
+                      <div class="line w-85"></div>
+                    </div>
+                    <div class="list-row">
+                      <span class="pill high">HIGH</span>
+                      <div class="line w-50"></div>
+                    </div>
+                    <div class="list-row">
+                      <span class="pill med">MED</span>
+                      <div class="line w-60"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
+              <div class="hero-glass-glow"></div>
             </div>
-            <div class="floating-card card-1">
-              <i class="bi bi-check-circle-fill text-success"></i>
-              <span>Task completed!</span>
-            </div>
-            <div class="floating-card card-2">
-              <i class="bi bi-bell-fill text-warning"></i>
-              <span>Deadline reminder</span>
+
+            <!-- Mobile mockup (background) -->
+            <div class="mockup-window glass-window mockup-mobile">
+              <div class="mockup-body p-3">
+                <div class="mobile-bar mb-2"></div>
+                <div class="mobile-kpi mb-3"></div>
+                <div class="mobile-list">
+                  <div class="mobile-item"></div>
+                  <div class="mobile-item"></div>
+                  <div class="mobile-item"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -310,5 +367,11 @@
       });
     });
   </script>
+
+  <!-- GSAP + ScrollTrigger (defer for performance) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <!-- Landing page animation bootstrap -->
+  <script defer src="/landing.js"></script>
 </body>
 </html>
