@@ -46,10 +46,20 @@
           </button>
         </div>
 
-        <div class="form-check form-switch me-1">
-          <input class="form-check-input" type="checkbox" id="darkToggle">
-          <label class="form-check-label small text-muted" for="darkToggle">Dark</label>
+        <!-- ✅ UPDATED PROFESSIONAL THEME TOGGLE (NO FEATURE CHANGE) -->
+        <div class="theme-toggle" role="group" aria-label="Theme toggle">
+          <input class="theme-toggle__input" type="checkbox" id="darkToggle" />
+          <label class="theme-toggle__btn" for="darkToggle" title="Toggle dark mode">
+            <span class="theme-toggle__icon theme-toggle__icon--sun">
+              <i class="bi bi-sun-fill"></i>
+            </span>
+            <span class="theme-toggle__icon theme-toggle__icon--moon">
+              <i class="bi bi-moon-stars-fill"></i>
+            </span>
+            <span class="theme-toggle__knob"></span>
+          </label>
         </div>
+        <!-- ✅ END THEME TOGGLE -->
 
         <button id="loginBtn" class="btn btn-outline-secondary btn-sm">Sign in</button>
         <button id="signupBtn" class="btn btn-primary btn-sm">Sign up</button>
@@ -62,6 +72,8 @@
       </div>
     </div>
   </nav>
+
+  <div id="sidebarOverlay"></div>
 
   <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar">
