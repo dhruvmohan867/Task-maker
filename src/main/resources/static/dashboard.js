@@ -132,7 +132,6 @@ function showLoader(on = true) {
 }
 
 // ===================== TOAST =====================
-// ===================== TOAST =====================
 function toast(msg, type = 'error') {
   const cont = document.getElementById('toastContainer');
   if (!cont) return;
@@ -140,20 +139,18 @@ function toast(msg, type = 'error') {
   const bgClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
   const t = document.createElement('div');
   t.className = `toast align-items-center ${bgClass} border-0`;
-  t.setAttribute('role', 'alert');
-  t.setAttribute('aria-live', 'assertive');
-  t.setAttribute('aria-atomic', 'true');
-
-  // Fixed: Corrected variable name from 'tr' to 't' and replaced table HTML with valid Toast HTML
-  t.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">${escapeHtml(msg)}</div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>`;
-
+  tr.innerHTML = `
+  <td class="ps-3">
+    <div class="fw-semibold">${escapeHtml(t.title || '')}</div>
+  </td>
+  <td><span class="badge ${statusBadgeClass}">${s}</span></td>
+  <td class="d-none d-sm-table-cell"><span class="badge ${priorityBadgeClass}">${p}</span></td>
+  <td class="d-none d-md-table-cell text-muted small">${fmtDate(t.dueDate)}</td>
+  <td class="text-end pe-3">
+    ... (actions)
+  </td>`;
   cont.appendChild(t);
-  const bsToast = new bootstrap.Toast(t, { delay: 3000 });
-  bsToast.show();
+  new bootstrap.Toast(t, { delay: 3000 }).show();
   t.addEventListener('hidden.bs.toast', () => t.remove());
 }
 
