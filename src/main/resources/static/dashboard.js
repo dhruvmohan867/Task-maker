@@ -159,7 +159,8 @@ async function api(path, opt = {}) {
 
   if (token) opt.headers.Authorization = 'Bearer ' + token;
 
-  const timeoutMs = 15000;
+  // Fix: Increased timeout to 60 seconds to allow for Render cold starts
+  const timeoutMs = 60000;
   let timeoutId = null;
 
   if (!opt.signal) {
@@ -183,7 +184,18 @@ async function api(path, opt = {}) {
       throw new Error('Session expired or unauthorized. Please login again.');
     }
 
-    if (!res.ok) throw new Error(txt || 'Request failed');
+    if (!res.ok) {
+        // Fix: Attempt to parse specific error JSON from backend (e.g., TaskController validation errors)
+        let errorMsg = txt;
+        try {
+            const jsonErr = JSON.parse(txt);
+            errorMsg = jsonErr.error || jsonErr.message || txt;
+        } catch (e) {
+            // Not JSON
+        }
+        throw new Error(errorMsg || 'Request failed');
+    }
+    
     return txt ? JSON.parse(txt) : null;
   } finally {
     if (timeoutId) clearTimeout(timeoutId);
