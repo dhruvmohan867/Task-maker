@@ -98,6 +98,7 @@ html[data-theme="dark"] .modal-content {
 /* Toast style (Bootstrap container used in HTML) */
 .toast.success { --bs-toast-bg: #198754; --bs-toast-color: #fff; }
 .toast.error   { --bs-toast-bg: #dc3545; --bs-toast-color: #fff; }
+
 /* ==========================================================================
    Enterprise SaaS Design System (Bootstrap-compatible)
    - Neutral base + 1 accent + semantic colors
@@ -176,10 +177,22 @@ html[data-theme="dark"] .app-navbar{
   grid-template-columns: 280px 1fr;
   min-height: calc(100vh - 56px);
 }
+
+/* --- Responsiveness: App Shell and Sidebar --- */
 @media (max-width: 992px){
   .app-shell{ grid-template-columns: 1fr; }
-  .app-sidebar{ position: fixed; inset: 56px auto 0 0; transform: translateX(-102%); }
+  .app-sidebar{ 
+    position: fixed; 
+    inset: 56px auto 0 0; 
+    transform: translateX(-102%); 
+    z-index: 1050; 
+    width: 280px;
+    background-color: var(--bg0);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+  }
   .app-sidebar.is-open{ transform: translateX(0); }
+  .app-main { padding: 12px; }
 }
 
 /* Sidebar */
@@ -240,11 +253,7 @@ html[data-theme="dark"] .app-sidebar{
 /* Your old value was large; keep sections tighter */
 .app-section{ margin-bottom: 16px; }
 
-/* IMPORTANT:
-   Dashboard does not run the IntersectionObserver used on landing page.
-   If cards use .reveal, they stay invisible (opacity:0).
-   Make reveal visible by default inside dashboard shell.
-*/
+/* IMPORTANT: Dashboard visible by default inside dashboard shell. */
 .app-shell .reveal{ opacity: 1; transform: none; }
 .app-shell .reveal-in{ opacity: 1; transform: none; }
 
@@ -295,6 +304,17 @@ html[data-theme="dark"] .app-sidebar{
   gap: 12px;
   margin-bottom: 12px;
 }
+
+/* --- Responsive Header Stacking --- */
+@media (max-width: 768px) {
+  .app-section__head {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+  .kpi-value { font-size: 24px; }
+}
+
 .app-section__title{ margin:0; font-weight: 700; }
 .app-section__head .text-muted{ color: var(--muted) !important; }
 
@@ -331,6 +351,24 @@ html[data-theme="dark"] .app-sidebar{
 }
 .kpi-value{ font-size: 34px; font-weight: 800; line-height: 1.05; }
 .kpi-sub{ margin-top: 6px; }
+
+/* --- Responsiveness: Table Column Hiding --- */
+@media (max-width: 768px) {
+  /* Hide Due Date and Assignee columns on mobile to prevent overflow */
+  #tasksTable th:nth-child(4), 
+  #tasksTable td:nth-child(4),
+  #tasksTable th:nth-child(5), 
+  #tasksTable td:nth-child(5) {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Cap chart height on phones */
+  .chart-card canvas {
+    max-height: 220px !important;
+  }
+}
 
 /* Timeline */
 .timeline{ display:flex; flex-direction:column; gap: 10px; }
@@ -404,12 +442,7 @@ html[data-theme="dark"] .is-loading .skeleton{ background: rgba(255,255,255,.08)
 }
 @keyframes shimmer{ to { transform: translateX(120%); } }
 
-/* Keep your existing dark table hover */
-html[data-theme="dark"] .table-modern tbody tr:hover { background-color: #111111; }
-
-/* =========================================
-   Theme tokens (fix dark mode visibility)
-   ========================================= */
+/* Theme tokens */
 :root{
   --input-bg: rgba(255,255,255,.92);
   --input-border: rgba(15,23,42,.14);
@@ -436,7 +469,7 @@ html[data-theme="dark"]{
   --sidebar-muted: rgba(168,179,196,.85);
 }
 
-/* Make inputs readable in both themes */
+/* Form Controls */
 .form-control, .form-select, .input-group-text{
   background-color: var(--input-bg) !important;
   border-color: var(--input-border) !important;
@@ -450,7 +483,7 @@ html[data-theme="dark"]{
   border-color: rgba(37,99,235,.45) !important;
 }
 
-/* Buttons: consistent borders + hover/active feedback */
+/* Buttons */
 .btn{
   transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
 }
@@ -472,7 +505,7 @@ html[data-theme="dark"]{
   transform: translateY(1px);
 }
 
-/* Sidebar text contrast */
+/* Sidebar context */
 .app-sidebar, .app-sidebar a, .app-sidebar button{
   color: var(--sidebar-text);
 }
@@ -480,41 +513,11 @@ html[data-theme="dark"]{
   color: var(--sidebar-muted);
 }
 
-/* -----------------------------
-   Global text contrast fixes
-   ----------------------------- */
+/* Global text contrast fixes */
 .text-muted{ color: var(--muted) !important; }
 .small.text-muted{ color: var(--muted) !important; }
 
-/* Sidebar + profile card readability */
-.app-sidebar{ color: var(--sidebar-text); }
-.app-sidebar .text-muted{ color: var(--sidebar-muted) !important; }
-
-/* Inputs: always visible borders + readable text */
-.form-control, .form-select, .input-group-text{
-  background-color: var(--input-bg) !important;
-  border-color: var(--input-border) !important;
-  color: var(--input-text) !important;
-}
-.form-control::placeholder{ color: var(--input-placeholder) !important; }
-
-/* Outline buttons: keep contrast in dark mode */
-html[data-theme="dark"] .btn-outline-secondary{
-  color: var(--text) !important;
-  border-color: var(--btn-border) !important;
-}
-html[data-theme="dark"] .btn-outline-warning{
-  border-color: rgba(245, 158, 11, .55) !important;
-}
-html[data-theme="dark"] .btn-outline-warning:hover{
-  background-color: rgba(245, 158, 11, .12) !important;
-}
-
-/* Give all clickable buttons proper cursor feedback */
-button, .btn, .app-navitem{ cursor: pointer; }
-button:disabled, .btn:disabled{ cursor: not-allowed; }
-
-/* ===== Enterprise Landing Theme (High-fidelity hero) ===== */
+/* Enterprise Landing Theme */
 :root{
   --midnight: #0b1020;      /* base */
   --accent:   #2563EB;      /* primary CTA */
@@ -527,17 +530,14 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
   --studio-glow-2: rgba(168, 85, 247, 0.20);
 }
 
-/* Typography weight tune for hierarchy */
 .fw-800{ font-weight: 800; }
 
-/* Override primary to accent */
 .btn-primary{
   background: var(--accent);
   border-color: var(--accent);
 }
 .btn-primary:hover{ background:#1f56cc; border-color:#1f56cc; }
 
-/* Hero shell */
 .saas-hero{
   background: var(--midnight);
   position: relative;
@@ -563,7 +563,6 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
   display:inline-flex; align-items:center; gap:8px;
 }
 
-/* Mockup stage (4K friendly) */
 .mockup-stage{ position: relative; min-height: 420px; }
 .mockup-window{
   position: relative;
@@ -600,7 +599,6 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
 
 .mockup-body{ padding: 16px; }
 
-/* KPI chips */
 .glass-chip{
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.10);
@@ -616,7 +614,6 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
 
 .mock-row{ display:flex; gap:12px; margin-bottom:12px; flex-wrap: wrap; }
 
-/* Chart + list simulation cards */
 .glass-card{
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.10);
@@ -644,12 +641,10 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
 .line{ height: 10px; border-radius: 8px; background: rgba(255,255,255,.12); }
 .w-70{ width:70% }.w-85{ width:85% }.w-50{ width:50% }.w-60{ width:60% }
 
-/* Mobile mock details */
 .mockup-mobile .mobile-bar{ height:10px; width:60%; background: rgba(255,255,255,.2); border-radius: 10px; }
 .mockup-mobile .mobile-kpi{ height:72px; border-radius: 12px; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); }
 .mockup-mobile .mobile-item{ height:44px; border-radius: 10px; background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); margin-bottom: 8px; }
 
-/* Extra glow layer */
 .hero-glass-glow{
   position:absolute; inset:auto -20% -15% -20%; height: 120px;
   background: radial-gradient(60% 80% at 50% 0%, rgba(96,165,250,.30), transparent 60%);
@@ -657,13 +652,10 @@ button:disabled, .btn:disabled{ cursor: not-allowed; }
   pointer-events:none;
 }
 
-/* Ensure readable CTA outline on dark */
 .btn-outline-light{
   border-color: rgba(255,255,255,.35);
   color:#e8f0ff;
 }
 .btn-outline-light:hover{ background: rgba(255,255,255,.08); }
 
-/* Prefer modern sans-serif */
 body{ font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif; }
-/* ===== End Enterprise Landing Theme ===== */

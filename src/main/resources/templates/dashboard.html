@@ -13,16 +13,13 @@
 </head>
 
 <body class="bg-body">
-  <!-- Loading overlay -->
   <div id="loadingOverlay" class="loading-overlay" style="display:none">
     <div class="spinner-border text-primary" role="status"></div>
     <div class="mt-2 small text-muted">Loading...</div>
   </div>
 
-  <!-- Toasts -->
   <div class="toast-container position-fixed p-3 top-0 end-0" id="toastContainer"></div>
 
-  <!-- Top navbar -->
   <nav class="navbar app-navbar sticky-top">
     <div class="container-fluid">
       <div class="d-flex align-items-center gap-2">
@@ -60,15 +57,13 @@
           <i class="bi bi-box-arrow-right me-1"></i>Logout
         </button>
         <button id="newBtn" class="btn btn-success btn-sm">
-          <i class="bi bi-plus-lg me-1"></i>New Task
+          <i class="bi bi-plus-lg"></i> <span class="d-none d-sm-inline ms-1">New Task</span>
         </button>
       </div>
     </div>
   </nav>
 
-  <!-- App shell -->
   <div class="app-shell">
-    <!-- Sidebar -->
     <aside class="app-sidebar" id="appSidebar">
       <div class="app-sidebar__section">
         <div class="app-sidebar__title">Workspace</div>
@@ -85,7 +80,6 @@
           <i class="bi bi-calendar3 me-2"></i> Calendar
         </button>
 
-        <!-- Go to Tasks button -->
         <button class="app-navitem" type="button" id="goToTasksBtn">
           <i class="bi bi-list-task me-2"></i> My Tasks
         </button>
@@ -124,9 +118,7 @@
       </div>
     </aside>
 
-    <!-- Main content -->
     <main class="app-main">
-      <!-- Employee Analytics -->
       <section id="employeePanel" class="container-fluid dash-block">
         <div class="app-section__head">
           <div>
@@ -146,9 +138,8 @@
           </div>
         </div>
 
-        <!-- KPI row -->
         <div class="row g-3">
-          <div class="col-6 col-xl-3">
+          <div class="col-12 col-sm-6 col-xl-3">
             <div class="card kpi-card">
               <div class="card-body">
                 <div class="kpi-top">
@@ -160,7 +151,7 @@
               </div>
             </div>
           </div>
-          <div class="col-6 col-xl-3">
+          <div class="col-12 col-sm-6 col-xl-3">
             <div class="card kpi-card">
               <div class="card-body">
                 <div class="kpi-top">
@@ -172,7 +163,7 @@
               </div>
             </div>
           </div>
-          <div class="col-6 col-xl-3">
+          <div class="col-12 col-sm-6 col-xl-3">
             <div class="card kpi-card">
               <div class="card-body">
                 <div class="kpi-top">
@@ -184,7 +175,7 @@
               </div>
             </div>
           </div>
-          <div class="col-6 col-xl-3">
+          <div class="col-12 col-sm-6 col-xl-3">
             <div class="card kpi-card">
               <div class="card-body">
                 <div class="kpi-top">
@@ -198,7 +189,6 @@
           </div>
         </div>
 
-        <!-- Charts -->
         <div class="row g-3 mt-1" id="empChartsWrap">
           <div class="col-12 chart-pane is-active" data-pane="meStatusChart">
             <div class="card chart-card">
@@ -235,7 +225,6 @@
         </div>
       </section>
 
-      <!-- Admin Analytics -->
       <section id="adminPanel" class="container-fluid dash-block" style="display:none">
         <div class="app-section__head">
           <div>
@@ -271,7 +260,6 @@
         </div>
       </section>
 
-      <!-- Tasks section with Pagination -->
       <section class="container-fluid dash-block" id="tasksSection">
         <div class="app-section__head">
           <div>
@@ -283,7 +271,6 @@
           </button>
         </div>
 
-        <!-- Filters -->
         <div class="row g-2 align-items-end mb-3">
           <div class="col-md-5">
             <label class="form-label small text-muted mb-1">Search</label>
@@ -321,7 +308,6 @@
           </div>
         </div>
 
-        <!-- Tasks Table -->
         <div class="card">
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -342,7 +328,6 @@
           </div>
         </div>
 
-        <!-- Pagination -->
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div class="text-muted small" id="paginationInfo">Showing 0 of 0 tasks</div>
           <nav aria-label="Task pagination">
@@ -353,7 +338,6 @@
     </main>
   </div>
 
-  <!-- Calendar Modal -->
   <div class="modal fade" id="calendarModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
       <div class="modal-content">
@@ -368,7 +352,6 @@
     </div>
   </div>
 
-  <!-- Task Modal -->
   <div class="modal fade" id="taskModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-scrollable">
       <div class="modal-content">
