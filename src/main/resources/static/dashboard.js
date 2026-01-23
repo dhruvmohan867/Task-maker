@@ -139,18 +139,19 @@ function toast(msg, type = 'error') {
   const bgClass = type === 'success' ? 'text-bg-success' : 'text-bg-danger';
   const t = document.createElement('div');
   t.className = `toast align-items-center ${bgClass} border-0`;
-  tr.innerHTML = `
-  <td class="ps-3">
-    <div class="fw-semibold">${escapeHtml(t.title || '')}</div>
-  </td>
-  <td><span class="badge ${statusBadgeClass}">${s}</span></td>
-  <td class="d-none d-sm-table-cell"><span class="badge ${priorityBadgeClass}">${p}</span></td>
-  <td class="d-none d-md-table-cell text-muted small">${fmtDate(t.dueDate)}</td>
-  <td class="text-end pe-3">
-    ... (actions)
-  </td>`;
+  
+  // FIX: Use 't.innerHTML' and valid Toast HTML structure
+  t.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        ${escapeHtml(msg)}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>`;
+    
   cont.appendChild(t);
-  new bootstrap.Toast(t, { delay: 3000 }).show();
+  const bsToast = new bootstrap.Toast(t, { delay: 3000 });
+  bsToast.show();
   t.addEventListener('hidden.bs.toast', () => t.remove());
 }
 
