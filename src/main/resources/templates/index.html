@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>TaskManager – Organize Your Work Like a Pro</title>
   <meta name="description" content="A modern, secure task manager to plan, track, and complete your work efficiently.">
+  
   <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2">
   <link rel="shortcut icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2">
   <link rel="mask-icon" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2" color="#3b82f6">
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" href="/main.css">
 </head>
 <body class="landing-page">
-  <!-- Navbar -->
   <nav class="navbar navbar-expand-lg fixed-top landing-nav">
     <div class="container">
       <a class="navbar-brand fw-bold" href="/">
@@ -26,7 +27,7 @@
         <ul class="navbar-nav mx-auto">
           <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
           <li class="nav-item"><a class="nav-link" href="#how-it-works">How it Works</a></li>
-          <li class="nav-item"><a class="nav-link" href="#testimonials">Testimonials</a></li>
+          <li class="nav-item"><a class="nav-link" href="#architecture">Architecture</a></li>
         </ul>
         <div class="d-flex gap-2">
           <a class="btn btn-outline-light btn-sm" href="/login">Sign in</a>
@@ -36,7 +37,6 @@
     </div>
   </nav>
 
-  <!-- Hero Section -->
   <header class="hero-section saas-hero">
     <div class="hero-bg hero-glow"></div>
     <div class="container position-relative">
@@ -65,15 +65,11 @@
             </a>
           </div>
 
-          <div class="hero-stats mt-4">
-            
-          </div>
+          <div class="hero-stats mt-4"></div>
         </div>
 
-        <!-- Desktop + Mobile Mockups (glassmorphism, soft blur, depth) -->
         <div class="col-lg-6 mt-5 mt-lg-0">
           <div class="mockup-stage">
-            <!-- Desktop mockup -->
             <div class="mockup-window glass-window mockup-desktop">
               <div class="mockup-header">
                 <div class="mockup-dots">
@@ -84,7 +80,6 @@
                 <div class="mockup-title">TaskManager Dashboard</div>
               </div>
               <div class="mockup-body">
-                <!-- KPI row -->
                 <div class="mock-row">
                   <div class="kpi glass-chip">
                     <div class="kpi-top">
@@ -111,7 +106,6 @@
                     <div class="kpi-sub">Due passed</div>
                   </div>
                 </div>
-                <!-- Charts + list -->
                 <div class="mock-grid">
                   <div class="glass-card chart-card-sim">
                     <div class="bars">
@@ -146,7 +140,6 @@
               <div class="hero-glass-glow"></div>
             </div>
 
-            <!-- Mobile mockup (background) -->
             <div class="mockup-window glass-window mockup-mobile">
               <div class="mockup-body p-3">
                 <div class="mobile-bar mb-2"></div>
@@ -164,7 +157,6 @@
     </div>
   </header>
 
-  <!-- Features Section -->
   <section id="features" class="py-5 bg-light">
     <div class="container py-5">
       <div class="text-center mb-5">
@@ -213,7 +205,6 @@
     </div>
   </section>
 
-  <!-- How It Works -->
   <section id="how-it-works" class="py-5">
     <div class="container py-5">
       <div class="text-center mb-5">
@@ -246,68 +237,76 @@
     </div>
   </section>
 
-  <!-- Testimonials -->
-  <section id="testimonials" class="py-5 bg-dark text-white">
+  <section id="architecture" class="py-5 bg-dark text-white">
     <div class="container py-5">
-      <div class="text-center mb-5">
-        <span class="badge bg-light text-dark mb-3">Testimonials</span>
-        <h2 class="display-6 fw-bold">Loved by teams worldwide</h2>
-      </div>
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="stars mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <p>"TaskManager transformed how our team works. Simple, fast, and effective!"</p>
-            <div class="d-flex align-items-center mt-3">
-              <div class="avatar bg-primary">JD</div>
-              <div class="ms-3">
-                <div class="fw-bold">John Doe</div>
-                <small class="text-muted">Product Manager</small>
+      <div class="row align-items-center">
+        <div class="col-lg-5 mb-5 mb-lg-0">
+          <span class="badge bg-primary-subtle text-primary mb-3">Under the Hood</span>
+          <h2 class="display-6 fw-bold mb-4">Built for performance and scale.</h2>
+          <p class="text-white-50 lead mb-4">
+            We don't just prioritize features; we prioritize engineering. TaskManager is built on a modern, stateless architecture designed for reliability.
+          </p>
+          
+          <ul class="list-unstyled d-flex flex-column gap-4 mt-4">
+            <li class="d-flex gap-3">
+              <div class="d-flex justify-content-center align-items-center bg-primary bg-opacity-10 rounded-3 p-2" style="width: 48px; height: 48px;">
+                <i class="bi bi-shield-lock text-primary fs-4"></i>
               </div>
-            </div>
-          </div>
+              <div>
+                <h6 class="fw-bold mb-1">Stateless Security</h6>
+                <div class="text-white-50 small">JWT-based authentication ensures secure, scalable sessions without server-side state.</div>
+              </div>
+            </li>
+            <li class="d-flex gap-3">
+              <div class="d-flex justify-content-center align-items-center bg-success bg-opacity-10 rounded-3 p-2" style="width: 48px; height: 48px;">
+                <i class="bi bi-database text-success fs-4"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-1">NoSQL Flexibility</h6>
+                <div class="text-white-50 small">Powered by MongoDB to handle complex, nested task data and rapid schema evolution.</div>
+              </div>
+            </li>
+            <li class="d-flex gap-3">
+              <div class="d-flex justify-content-center align-items-center bg-warning bg-opacity-10 rounded-3 p-2" style="width: 48px; height: 48px;">
+                <i class="bi bi-lightning text-warning fs-4"></i>
+              </div>
+              <div>
+                <h6 class="fw-bold mb-1">Reactive Frontend</h6>
+                <div class="text-white-50 small">Lightweight Vanilla JS + Bootstrap 5 for a fast, dependency-free user experience.</div>
+              </div>
+            </li>
+          </ul>
         </div>
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="stars mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
+
+        <div class="col-lg-6 offset-lg-1">
+          <div class="card bg-black border border-secondary border-opacity-25 shadow-lg" style="transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);">
+            <div class="card-header bg-transparent border-bottom border-secondary border-opacity-25 d-flex gap-2 p-3">
+              <span class="rounded-circle bg-danger" style="width:10px;height:10px"></span>
+              <span class="rounded-circle bg-warning" style="width:10px;height:10px"></span>
+              <span class="rounded-circle bg-success" style="width:10px;height:10px"></span>
             </div>
-            <p>"The analytics dashboard gives me complete visibility into our team's productivity."</p>
-            <div class="d-flex align-items-center mt-3">
-              <div class="avatar bg-success">SK</div>
-              <div class="ms-3">
-                <div class="fw-bold">Sarah Kim</div>
-                <small class="text-muted">Tech Lead</small>
+            <div class="card-body p-4 font-monospace small" style="font-size: 0.85rem;">
+              <div class="text-muted mb-3">// Server-side stateless authentication flow</div>
+              <div class="text-info">@RestController</div>
+              <div class="mb-2"><span class="text-primary">public class</span> <span class="text-warning">AuthController</span> {</div>
+              
+              <div class="ps-3 mb-1">
+                <span class="text-primary">public</span> ResponseEntity&lt;?&gt; login(Request req) {
               </div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="testimonial-card">
-            <div class="stars mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <p>"Best task manager I've used. Clean UI and excellent dark mode support!"</p>
-            <div class="d-flex align-items-center mt-3">
-              <div class="avatar bg-warning">MR</div>
-              <div class="ms-3">
-                <div class="fw-bold">Mike Ross</div>
-                <small class="text-muted">Developer</small>
+              <div class="ps-4 mb-1 text-white-50">
+                <span class="text-primary">var</span> user = repo.findByUsername(req.getUser());
               </div>
+              <div class="ps-4 mb-1 text-white-50">
+                <span class="text-primary">if</span> (!encoder.matches(req.getPass(), user.getPass())) 
+              </div>
+              <div class="ps-5 mb-1 text-danger">throw new BadCredentialsException();</div>
+              
+              <div class="ps-4 mt-3 mb-1 text-muted">// Issue secure HS256 token</div>
+              <div class="ps-4 mb-1 text-white-50">
+                <span class="text-primary">return</span> jwt.createToken(user.getId(), roles);
+              </div>
+              <div class="ps-3">}</div>
+              <div>}</div>
             </div>
           </div>
         </div>
@@ -315,7 +314,6 @@
     </div>
   </section>
 
-  <!-- CTA Section -->
   <section class="py-5 bg-primary text-white">
     <div class="container py-5 text-center">
       <h2 class="display-6 fw-bold mb-4">Ready to boost your productivity?</h2>
@@ -326,7 +324,6 @@
     </div>
   </section>
 
-  <!-- Footer -->
   <footer class="py-4 bg-dark text-white">
     <div class="container">
       <div class="row align-items-center">
@@ -335,23 +332,16 @@
         </div>
         <div class="col-md-6 text-center text-md-end mt-3 mt-md-0">
           <div class="d-flex gap-3 justify-content-center justify-content-md-end">
-
-  <a href="https://www.mongodb.com/" target="_blank" rel="noopener noreferrer"
-     class="badge bg-secondary text-decoration-none">
-    <i class="bi bi-database me-1"></i>MongoDB
-  </a>
-
-  <a href="https://spring.io/projects/spring-boot" target="_blank" rel="noopener noreferrer"
-     class="badge bg-secondary text-decoration-none">
-    <i class="bi bi-box me-1"></i>Spring Boot
-  </a>
-
-  <a href="https://jwt.io/" target="_blank" rel="noopener noreferrer"
-     class="badge bg-secondary text-decoration-none">
-    <i class="bi bi-shield-lock me-1"></i>JWT
-  </a>
-
-</div>
+            <a href="https://www.mongodb.com/" target="_blank" rel="noopener noreferrer" class="badge bg-secondary text-decoration-none">
+              <i class="bi bi-database me-1"></i>MongoDB
+            </a>
+            <a href="https://spring.io/projects/spring-boot" target="_blank" rel="noopener noreferrer" class="badge bg-secondary text-decoration-none">
+              <i class="bi bi-box me-1"></i>Spring Boot
+            </a>
+            <a href="https://jwt.io/" target="_blank" rel="noopener noreferrer" class="badge bg-secondary text-decoration-none">
+              <i class="bi bi-shield-lock me-1"></i>JWT
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -359,7 +349,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Smooth scroll + reveal animations
+    // Smooth scroll
     document.querySelectorAll('a[href^="#"]').forEach(a => {
       a.addEventListener('click', e => {
         e.preventDefault();
@@ -368,10 +358,8 @@
     });
   </script>
 
-  <!-- GSAP + ScrollTrigger (defer for performance) -->
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
-  <!-- Landing page animation bootstrap -->
   <script defer src="/landing.js"></script>
 </body>
 </html>
