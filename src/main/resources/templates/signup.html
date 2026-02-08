@@ -1,33 +1,134 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign up · TaskManager</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Account · TaskManager</title>
+  
   <link rel="icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2">
-<link rel="shortcut icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2">
-<link rel="mask-icon" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2" color="#3b82f6">
+  <link rel="shortcut icon" type="image/svg+xml" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2">
+  <link rel="mask-icon" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/check2-square.svg?v=2" color="#3b82f6">
+  
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="/main.css">
 </head>
-<body class="bg-body d-flex align-items-center" style="min-height:100vh">
-  <div class="container" style="max-width:480px">
-    <div class="card shadow-sm">
-      <form class="card-body" id="signupPageForm" novalidate>
-        <h4 class="mb-3">Create Account</h4>
-        <div class="mb-2"><label class="form-label">Name</label><input id="sp_n" class="form-control" required><div class="invalid-feedback">Name required</div></div>
-        <div class="mb-2"><label class="form-label">Email</label><input id="sp_e" type="email" class="form-control" required><div class="invalid-feedback">Valid email required</div></div>
-        <div class="mb-2"><label class="form-label">Username</label><input id="sp_u" class="form-control" required><div class="invalid-feedback">Username required</div></div>
-        <div class="mb-2"><label class="form-label">Password</label><input id="sp_p" type="password" class="form-control" required><div class="invalid-feedback">Min 8 chars</div></div>
-        <div class="mb-3"><label class="form-label">Confirm Password</label><input id="sp_c" type="password" class="form-control" required><div class="invalid-feedback">Passwords must match</div></div>
-        <div class="small text-muted mb-2" id="pw_hint">Use at least 8 characters.</div>
-        <div class="d-grid gap-2">
-          <button class="btn btn-success" type="submit">Create Account</button>
-          <a class="btn btn-outline-secondary" href="/login">Already have an account? Login</a>
+<body class="bg-body p-0 m-0 overflow-hidden">
+
+<div class="auth-wrapper">
+  <div class="auth-visual d-none d-lg-flex">
+    <div class="auth-visual-content">
+      <a href="/" class="d-flex align-items-center gap-2 text-decoration-none mb-5">
+        <i class="bi bi-check2-square fs-3 text-white"></i>
+        <span class="h4 fw-bold mb-0 text-white">TaskManager</span>
+      </a>
+      
+      <h2 class="display-6 fw-bold text-white mb-3">
+        Start building <br>better habits.
+      </h2>
+      <p class="lead text-white-50 mb-4">
+        Join thousands of developers and teams who trust TaskManager to ship faster.
+      </p>
+    </div>
+    
+    <div class="auth-visual-content">
+      <div class="d-flex flex-column gap-3">
+        <div class="d-flex align-items-center gap-3 text-white-50">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          <span>Free for individuals</span>
         </div>
-        <div id="sp_err" class="invalid-feedback d-block mt-2" style="display:none"></div>
+        <div class="d-flex align-items-center gap-3 text-white-50">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          <span>No credit card required</span>
+        </div>
+        <div class="d-flex align-items-center gap-3 text-white-50">
+          <i class="bi bi-check-circle-fill text-success fs-5"></i>
+          <span>Secure & Private</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-form-side">
+    <div class="auth-container">
+      <div class="mb-4">
+        <h1 class="h3 fw-bold mb-2">Get started</h1>
+        <p class="text-muted">Create your account in seconds.</p>
+      </div>
+
+      <form id="signupPageForm" novalidate>
+        
+        <div class="mb-3">
+          <label class="form-label" for="sp_n">Full Name</label>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+              <i class="bi bi-person-badge"></i>
+            </span>
+            <input id="sp_n" class="form-control border-start-0 ps-0" placeholder="e.g. Dhruv Mohan Shukla" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="sp_e">Email Address</label>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+              <i class="bi bi-envelope"></i>
+            </span>
+            <input id="sp_e" type="email" class="form-control border-start-0 ps-0" placeholder="name@company.com" required>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label" for="sp_u">Username</label>
+          <div class="input-group">
+            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+              <i class="bi bi-at"></i>
+            </span>
+            <input id="sp_u" class="form-control border-start-0 ps-0" placeholder="username" required>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-2">
+          <div class="col-md-6">
+            <label class="form-label" for="sp_p">Password</label>
+            <div class="input-group">
+              <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+                <i class="bi bi-lock"></i>
+              </span>
+              <input id="sp_p" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="sp_c">Confirm</label>
+            <div class="input-group">
+              <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+                <i class="bi bi-lock-fill"></i>
+              </span>
+              <input id="sp_c" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" required>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-4 text-muted small" id="pw_hint">
+          <i class="bi bi-info-circle me-1"></i> Use at least 8 characters.
+        </div>
+
+        <div id="sp_err" class="alert alert-danger py-2 small" style="display: none !important;"></div>
+
+        <button class="btn btn-primary w-100 mb-4 py-2 fw-semibold" type="submit">
+          Create Account
+        </button>
+
+        <div class="text-center small text-muted">
+          Already have an account? 
+          <a href="/login" class="fw-semibold text-decoration-none text-primary">Sign in</a>
+        </div>
+
       </form>
     </div>
   </div>
-  <script src="/auth.js"></script>
+</div>
+
+<script src="/auth.js"></script>
 </body>
 </html>

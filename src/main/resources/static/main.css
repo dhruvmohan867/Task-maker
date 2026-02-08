@@ -749,3 +749,108 @@ body.landing-page .avatar{
 body.landing-page footer{
   border-top: 1px solid rgba(255,255,255,.10);
 }
+/* ==========================================================
+   6) MODERN AUTH LAYOUT (Professional Split View)
+   ========================================================== */
+
+.auth-wrapper {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+/* Desktop: Split 45% Visual / 55% Form */
+@media (min-width: 992px) {
+  .auth-wrapper {
+    grid-template-columns: 45% 55%;
+  }
+}
+
+/* Left Side: Visual Brand Area */
+.auth-visual {
+  background: var(--midnight);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3rem;
+  color: white;
+}
+
+/* Background Gradients (matching landing page) */
+.auth-visual::before {
+  content: '';
+  position: absolute;
+  top: -10%; right: -10%;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(37,99,235,0.3) 0%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+}
+.auth-visual::after {
+  content: '';
+  position: absolute;
+  bottom: -10%; left: -10%;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(168,85,247,0.2) 0%, transparent 70%);
+  filter: blur(80px);
+  z-index: 0;
+}
+
+.auth-visual-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Right Side: Clean Form Area */
+.auth-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg0); /* Light/Dark adaptive */
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Premium Form Inputs */
+.auth-form-side .form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.auth-form-side .form-control {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.auth-form-side .form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+  transform: translateY(-1px);
+}
+
+.auth-form-side .btn-primary {
+  padding: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, #1d4ed8 100%);
+  border: none;
+}
+.auth-form-side .btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(37,99,235,0.3);
+  transform: translateY(-2px);
+}
